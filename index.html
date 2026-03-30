@@ -1,11 +1,84 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RokenAI</title>
+    <title>Roken AI</title>
+    <style>
+        body { font-family: Arial; text-align: center; background: #f2f2f2; }
+        .box { background: white; padding: 20px; margin: 20px auto; width: 500px; border-radius: 10px; }
+        button { padding: 10px; margin: 5px; cursor: pointer; }
+    </style>
 </head>
 <body>
-    <h1>Hallo, I am RokenAI</h1>
+
+<h1>🚧 Roken AI System</h1>
+
+<div class="box">
+    <h3>Upload Jalan Rusak</h3>
+    <input type="file" id="file"><br><br>
+    <input type="text" id="lokasi" placeholder="Masukkan lokasi"><br><br>
+    <button onclick="upload()">Upload & Analisis</button>
+</div>
+
+<div class="box">
+    <h3>📄 Dashboard Laporan</h3>
+    <button onclick="loadData()">Refresh</button>
+    <div id="list"></div>
+</div>
+
+<script>
+const BASE_URL = "ISI_URL_NGROK"; // ganti dari Colab
+
+async function upload() {
+    let file = document.getElementById("file").files[0];
+    let lokasi = document.getElementById("lokasi").value;
+
+    let formData = new FormData();
+    formData.append("file", file);
+    formData.append("lokasi", lokasi);
+
+    let res = await fetch(BASE_URL + "/upload/", {
+        method: "POST",
+        body: formData
+    });
+
+    let data = await res.json();
+    alert("Laporan berhasil dikirim!");
+    console.log(data);
+}
+
+async function loadData() {
+    let res = await fetch(BASE_URL + "/laporan/");
+    let data = await res.json();
+
+    let html = "";
+    data.forEach(l => {
+        html += `
+        <div style="border:1px solid #ccc; margin:10px; padding:10px;">
+            <b>${l.id}</b><br>
+            Lokasi: ${l.lokasi}<br>
+            Kerusakan: ${l.kerusakan} (${l.tingkat})<br>
+            Status: ${l.status}<br>
+            <button onclick="verif('${l.id}','verified')">✔ Verifikasi</button>
+            <button onclick="verif('${l.id}','denied')">❌ Tolak</button>
+        </div>
+        `;
+    });
+
+    document.getElementById("list").innerHTML = html;
+}
+
+async function verif(id, status) {
+    let formData = new FormData();
+    formData.append("status", status);
+
+    await fetch(BASE_URL + "/verifikasi/" + id, {
+        method: "POST",
+        body: formData
+    });
+
+    loadData();
+}
+</script>
+
 </body>
 </html>
