@@ -1,6 +1,5 @@
 # 🛣️ RokenAI (Broken Road AI)
 **Solusi Cerdas Pelaporan Jalan Rusak berbasis AI**
-*Proyek untuk Intel Global Festival 2026*
 
 ## 💡 Masalah (The Problem)
 Banyak kecelakaan terjadi akibat lubang di jalan raya yang terlambat ditangani. Masyarakat sulit melapor, dan pemerintah sulit melakukan validasi data secara cepat.
@@ -14,4 +13,4 @@ RokenAI menggunakan **OpenCV** dan **Logistic Regression** untuk mendeteksi ting
 - **Platform:** GitHub Pages & Google Colab
 
 ---
- dikembangkan oleh **Tim SixJST** 🚀
+ dikembangkan oleh **Tim FourJST** 🚀
