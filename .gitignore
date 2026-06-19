@@ -24,6 +24,8 @@ wheels/
 *.egg
 MANIFEST
 .pytest_cache/
+auth/config.php
+assets/img
 
 # Virtual Environment
 RokenAI/
