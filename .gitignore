@@ -31,7 +31,8 @@ assets/img
 RokenAI/
 
 # Large Model Files
-assets/archive.zip
+model/archive.zip
+model/
 
 # IDE
 .vscode/
