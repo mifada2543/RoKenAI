@@ -54,7 +54,8 @@ def main():
         conf=CONFIDENCE_THRESHOLD, 
         imgsz=512, 
         device='cpu', 
-        save=True
+        save=True,
+        exist_ok=True
     )
 
     print("\n" + "="*50)
