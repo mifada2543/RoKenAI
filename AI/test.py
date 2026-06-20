@@ -6,6 +6,9 @@ from ultralytics import YOLO
 MODEL_ASLI = 'best.pt'
 FOLDER_OPENVINO = 'best_openvino_model'
 
+# Folder tujuan kustom untuk hasil deteksi web PHP
+FOLDER_HASIL = '/opt/lampp/htdocs/RoKenAI/AI/hasil'
+
 # Ganti ini dengan file yang ingin Anda uji (bisa .jpg, .png, atau .mp4)
 # Jika ingin pakai WEBCAM, ganti nilainya menjadi angka 0 (tanpa kutip)
 SUMBER_DATA = 'test.jpeg' 
@@ -36,9 +39,8 @@ def main():
 
     # 3. Load Model yang Sudah Dioptimasi
     print("\n[INFO] Memuat model ke sistem...")
-    # Ubah bagian ini di skrip Anda agar tidak muncul warning:
     if os.path.exists(FOLDER_OPENVINO):
-        model = YOLO(FOLDER_OPENVINO, task='detect') # <--- Tambahkan task='detect'
+        model = YOLO(FOLDER_OPENVINO, task='detect') 
         print("[INFO] Model yang digunakan: OpenVINO (Intel Optimized)")
     else:
         model = YOLO(MODEL_ASLI, task='detect')
@@ -55,12 +57,14 @@ def main():
         imgsz=512, 
         device='cpu', 
         save=True,
-        exist_ok=True
+        project=FOLDER_HASIL, # <--- Menyimpan langsung ke folder hasil proyek Anda
+        name='.',             # <--- Menghilangkan subfolder tambahan (predict/)
+        exist_ok=True         # <--- Menimpa file lama agar storage server tidak penuh
     )
 
     print("\n" + "="*50)
     print("[SELESAI] Deteksi sukses dilakukan!")
-    print("Silakan cek hasilnya di dalam folder: runs/detect/predict/")
+    print(f"Silakan cek hasilnya di dalam folder: {FOLDER_HASIL}")
     print("="*50)
 
 if __name__ == "__main__":
