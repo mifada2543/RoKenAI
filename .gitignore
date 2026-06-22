@@ -29,6 +29,7 @@ assets/img
 
 # Virtual Environment
 RokenAI/
+koboldcpp
 
 # Large Model Files
 model/archive.zip
