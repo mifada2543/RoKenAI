@@ -5,8 +5,8 @@ from ultralytics import YOLO
 # --- KONFIGURASI ---
 MODEL_ASLI = 'best.pt'
 FOLDER_OPENVINO = 'best_openvino_model'
-FOLDER_HASIL = '/opt/lampp/htdocs/RoKenAI/controller/uploads'
-CONFIDENCE_THRESHOLD = 0.4 
+FOLDER_HASIL = '/opt/lampp/htdocs/RoKenAI/controller/uploads/output'
+CONFIDENCE_THRESHOLD = 0.1 
 # -------------------
 
 def main():
