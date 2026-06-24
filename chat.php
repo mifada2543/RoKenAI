@@ -189,10 +189,12 @@
 
             <div class="input-bar">
                 <div class="input-inner">
-                    <button class="add-btn" aria-label="Tambah">
+                    <!-- Tambahkan input file tersembunyi -->
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                    <button class="add-btn" id="uploadBtn" aria-label="Tambah">
                         <i data-lucide="plus" style="width:20px;height:20px;"></i>
                     </button>
-                    <input class="chat-input" type="text" id="chatInput" placeholder="Tanya RokenAI" autocomplete="off">
+                    <input class="chat-input" type="text" id="chatInput" placeholder="Tanya RokenAI atau upload gambar..." autocomplete="off">
                     <button class="send-btn" id="sendBtn" aria-label="Kirim">
                         <i data-lucide="arrow-up" style="width:16px;height:16px;color:#fff;"></i>
                     </button>
@@ -206,6 +208,18 @@
         const chatArea = document.getElementById('chatArea');
         const chatInput = document.getElementById('chatInput');
         const sendBtn = document.getElementById('sendBtn');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+
+        // Memicu klik input file saat tombol + ditekan
+        uploadBtn.addEventListener('click', () => fileInput.click());
+
+        // Ketika file gambar dipilih, langsung kirim
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length > 0) {
+                prosesKirim(fileInput.files[0]);
+            }
+        });
 
         function addMessage(text, isUser) {
             const div = document.createElement('div');
@@ -220,17 +234,58 @@
             chatArea.scrollTop = chatArea.scrollHeight;
         }
 
-        function sendMessage() {
+        function prosesKirim(file = null) {
             const text = chatInput.value.trim();
-            if (!text) return;
-            addMessage(text, true);
+            if (!text && !file) return;
+
+            let formData = new FormData();
+
+            if (file) {
+                addMessage(`[Mengirim Gambar: ${file.name}]`, true);
+                formData.append('gambar', file);
+            } else {
+                addMessage(text, true);
+                formData.append('pesan', text);
+            }
+
             chatInput.value = '';
-            setTimeout(() => addMessage('Sedang memproses...', false), 600);
+            fileInput.value = ''; // Reset file input
+
+            // Buat ID unik untuk bubble "Sedang memproses..." agar bisa diganti nanti
+            const loadingId = 'load-' + Date.now();
+            const divLoading = document.createElement('div');
+            divLoading.className = 'bot-message';
+            divLoading.id = loadingId;
+            divLoading.innerHTML = `<div class="bot-avatar"><img src="assets/Logo.png" alt="RoKen"></div><div class="bot-bubble">Sedang mendeteksi gambar...</div>`;
+            chatArea.appendChild(divLoading);
+            chatArea.scrollTop = chatArea.scrollHeight;
+
+            // Kirim data ke backend proses_chat.php via AJAX
+            fetch('controller/proses_chat.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Hapus bubble loading
+                    document.getElementById(loadingId).remove();
+
+                    // Tampilkan hasil dari model
+                    if (data.status === 'success') {
+                        addMessage(data.pesan, false);
+                    } else {
+                        addMessage("Gagal memproses gambar: " + data.error, false);
+                    }
+                })
+                .catch(err => {
+                    document.getElementById(loadingId).remove();
+                    addMessage("Terjadi kesalahan sistem.", false);
+                });
         }
 
-        sendBtn.addEventListener('click', sendMessage);
+        sendBtn.addEventListener('click', () => prosesKirim());
         chatInput.addEventListener('keydown', e => {
-            if (e.key === 'Enter') sendMessage();
+            if (e.key === 'Enter') prosesKirim();
         });
     </script>
 </body>
