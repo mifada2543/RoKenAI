@@ -9,9 +9,9 @@ RokenAI menggunakan **OpenCV** dan **Logistic Regression** untuk mendeteksi ting
 
 ## 🛠️ Tech Stack
 ```
-- **Frontend:** HTML5, Tailwind CSS
-- **Backend AI:** Python, OpenCV, Logistic Regression
-- **Platform:** GitHub Pages & Google Colab
+- Frontend: HTML5, Tailwind CSS
+- Backend AI: Python, OpenCV, Logistic Regression
+- Platform: GitHub Pages & Google Colab
 ```
 
 ---
