@@ -20,7 +20,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
         if (empty($username) || empty($password)) {
             $error = 'Please fill in all fields.';
         } else {
-            // Query user from database
             $stmt = $conn->prepare("SELECT id, username, password FROM users WHERE username = ? OR email = ? LIMIT 1");
             $stmt->bind_param("ss", $username, $username);
             $stmt->execute();
@@ -46,655 +45,381 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
 }
 ?>
 <!DOCTYPE html>
-<html lang="id" data-theme="dark">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoKenAI | Login</title>
-    <meta name="description" content="Login to RoKenAI - AI-powered road infrastructure inspection platform">
-    <meta name="theme-color" content="#0B0F19">
+    <title>RoKenAI | Masuk</title>
     <link rel="icon" type="image/png" href="../assets/Logo.png">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="../assets/js/lucide.js"></script>
-    <script src="../assets/js/i18n.js"></script>
-
+    <?php include '../partials/link.php'; ?>
     <style>
-        /* ===== Theme Variables (matching the main site) ===== */
-        :root {
-            --bg-primary: #0B0F19;
-            --bg-card: #1E293B;
-            --bg-elevated: rgba(30, 41, 59, 0.6);
-            --bg-input: rgba(255, 255, 255, 0.04);
-            --bg-hover: rgba(255, 255, 255, 0.06);
-            --brand-yellow: #FACC15;
-            --brand-amber: #EAB308;
-            --brand-indigo: #6366F1;
-            --text-primary: #F1F5F9;
-            --text-secondary: #94A3B8;
-            --text-muted: #64748B;
-            --border-color: rgba(255, 255, 255, 0.08);
-            --border-subtle: rgba(255, 255, 255, 0.06);
-            --border-muted: rgba(255, 255, 255, 0.04);
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
-            --shadow-lg: 0 25px 50px rgba(0, 0, 0, 0.4);
-            --success: #22C55E;
-            --danger: #EF4444;
-            --orb-yellow: rgba(250, 204, 21, 0.08);
-            --orb-indigo: rgba(99, 102, 241, 0.06);
-        }
+        /* ================================================================
+           RoKenAI — Halaman Login (desain.md 5.2)
+           Split layout: kiri form putih, kanan ilustrasi jalan + overlay biru
+           ================================================================ */
 
-        [data-theme="light"] {
-            --bg-primary: #F5F7FA;
-            --bg-card: #FFFFFF;
-            --bg-elevated: rgba(255, 255, 255, 0.85);
-            --bg-input: rgba(0, 0, 0, 0.04);
-            --bg-hover: rgba(0, 0, 0, 0.04);
-            --text-primary: #0F172A;
-            --text-secondary: #475569;
-            --text-muted: #94A3B8;
-            --border-color: rgba(0, 0, 0, 0.08);
-            --border-subtle: rgba(0, 0, 0, 0.06);
-            --border-muted: rgba(0, 0, 0, 0.04);
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 25px 50px rgba(0, 0, 0, 0.1);
-            --orb-yellow: rgba(250, 204, 21, 0.1);
-            --orb-indigo: rgba(99, 102, 241, 0.08);
-        }
-
-        /* Smooth theme transition */
-        * {
-            transition: background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease, color 0.3s ease;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
+            font-family: var(--font-body);
+            background: var(--surface-muted);
+            color: var(--ink-900);
             min-height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        .auth-container {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        /* ===== Left: Form ===== */
+        .auth-form-side {
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            overflow: hidden;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            padding: 32px;
+            background: var(--surface);
         }
-
-        /* ===== Background Orbs ===== */
-        .orb {
-            position: fixed;
-            border-radius: 50%;
-            pointer-events: none;
-            z-index: 0;
-            filter: blur(80px);
-        }
-
-        .orb-1 {
-            width: 350px;
-            height: 350px;
-            background: var(--orb-yellow);
-            top: -120px;
-            right: -80px;
-            animation: float 8s ease-in-out infinite;
-        }
-
-        .orb-2 {
-            width: 400px;
-            height: 400px;
-            background: var(--orb-indigo);
-            bottom: -150px;
-            left: -120px;
-            animation: float 12s ease-in-out infinite reverse;
-        }
-
-        .orb-3 {
-            width: 200px;
-            height: 200px;
-            background: var(--orb-indigo);
-            top: 50%;
-            right: 10%;
-            animation: float 10s ease-in-out infinite;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-12px); }
-        }
-
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes shimmer {
-            0% { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
-
-        @keyframes glow-pulse {
-            0%, 100% { box-shadow: 0 0 20px rgba(250, 204, 21, 0.1); }
-            50% { box-shadow: 0 0 35px rgba(250, 204, 21, 0.25); }
-        }
-
-        /* ===== Auth Container ===== */
-        .auth-container {
-            position: relative;
-            z-index: 1;
+        .auth-form-inner {
             width: 100%;
-            max-width: 440px;
-            padding: 20px;
-            animation: fadeInUp 0.6s ease;
+            max-width: 400px;
         }
 
-        /* ===== Back to Home ===== */
-        .back-home {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            color: var(--text-muted);
-            text-decoration: none;
-            font-size: 13px;
-            font-weight: 500;
-            margin-bottom: 24px;
-            transition: all 0.2s ease;
-        }
-
-        .back-home:hover {
-            color: var(--brand-yellow);
-        }
-
-        .back-home i {
-            width: 16px;
-            height: 16px;
-        }
-
-        /* ===== Auth Card ===== */
-        .auth-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--border-color);
-            border-radius: 28px;
-            padding: 40px 36px;
-            box-shadow: var(--shadow-lg);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .auth-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--brand-yellow), transparent);
-            opacity: 0.5;
-        }
-
-        /* ===== Logo ===== */
         .auth-logo {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 12px;
+            gap: 10px;
             text-decoration: none;
-            margin-bottom: 8px;
-        }
-
-        .auth-logo img {
-            height: 48px;
-            width: auto;
-        }
-
-        .auth-logo span {
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            background: linear-gradient(135deg, #FACC15 0%, #6366F1 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        /* ===== Auth Header ===== */
-        .auth-header {
-            text-align: center;
             margin-bottom: 32px;
         }
-
-        .auth-header h1 {
+        .auth-logo img { height: 36px; }
+        .auth-logo span {
             font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            color: var(--ink-900);
+            font-family: var(--font-heading);
+        }
+        .auth-logo span .accent { color: var(--primary-700); }
+
+        .auth-head {
+            margin-bottom: 28px;
+        }
+        .auth-head h1 {
+            font-family: var(--font-heading);
+            font-size: 24px;
             font-weight: 700;
-            color: var(--text-primary);
+            color: var(--ink-900);
             margin-bottom: 6px;
-            letter-spacing: -0.02em;
         }
-
-        .auth-header p {
+        .auth-head p {
             font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.5;
+            color: var(--ink-600);
         }
 
-        /* ===== Error/Success Alert ===== */
         .alert {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 12px 16px;
-            border-radius: 14px;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: var(--radius-sm);
             font-size: 13px;
             font-weight: 500;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             animation: fadeInUp 0.3s ease;
         }
+        .alert i { width: 16px; height: 16px; flex-shrink: 0; }
+        .alert-error { background: rgba(220,38,38,0.08); border: 1px solid rgba(220,38,38,0.15); color: var(--status-danger); }
+        .alert-success { background: rgba(22,163,74,0.08); border: 1px solid rgba(22,163,74,0.15); color: var(--status-success); }
 
-        .alert i {
-            width: 18px;
-            height: 18px;
-            flex-shrink: 0;
-        }
-
-        .alert-error {
-            background: rgba(239, 68, 68, 0.1);
-            border: 1px solid rgba(239, 68, 68, 0.2);
-            color: #EF4444;
-        }
-
-        .alert-success {
-            background: rgba(34, 197, 94, 0.1);
-            border: 1px solid rgba(34, 197, 94, 0.2);
-            color: #22C55E;
-        }
-
-        /* ===== Form Group ===== */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
+        .form-group { margin-bottom: 18px; }
         .form-group label {
             display: block;
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
-            color: var(--text-secondary);
-            margin-bottom: 8px;
-            letter-spacing: 0.02em;
-            text-transform: uppercase;
+            color: var(--ink-900);
+            margin-bottom: 6px;
         }
 
-        .form-input-wrap {
+        .input-wrap {
             position: relative;
             display: flex;
             align-items: center;
         }
-
-        .form-input-wrap .input-icon {
+        .input-wrap .input-icon {
             position: absolute;
-            left: 16px;
-            color: var(--text-muted);
+            left: 12px;
+            color: #94A3B8;
             pointer-events: none;
             display: flex;
-            align-items: center;
         }
+        .input-wrap .input-icon i { width: 16px; height: 16px; }
 
-        .form-input-wrap .input-icon i {
-            width: 18px;
-            height: 18px;
-        }
-
-        .form-input {
+        .field-input {
             width: 100%;
-            padding: 14px 16px 14px 48px;
-            border-radius: 14px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-primary);
+            padding: 12px 14px 12px 40px;
+            border-radius: var(--radius-sm);
+            background: var(--surface);
+            border: 1.5px solid var(--line-200);
+            color: var(--ink-900);
             font-size: 14px;
-            font-family: 'Plus Jakarta Sans', sans-serif;
-            font-weight: 500;
+            font-family: var(--font-body);
             outline: none;
-            transition: all 0.25s ease;
+            transition: all 0.2s ease;
         }
-
-        .form-input::placeholder {
-            color: var(--text-muted);
-            font-weight: 400;
+        .field-input:focus {
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
+        .field-input::placeholder { color: #94A3B8; }
 
-        .form-input:focus {
-            border-color: rgba(250, 204, 21, 0.3);
-            background: var(--bg-hover);
-            box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.06);
-        }
-
-        .form-input.input-error {
-            border-color: rgba(239, 68, 68, 0.3);
-        }
-
-        /* ===== Password Toggle ===== */
-        .password-toggle {
+        .pass-toggle {
             position: absolute;
-            right: 14px;
+            right: 10px;
             background: none;
             border: none;
-            color: var(--text-muted);
+            color: #94A3B8;
             cursor: pointer;
             padding: 4px;
             display: flex;
-            align-items: center;
-            transition: color 0.2s ease;
         }
+        .pass-toggle:hover { color: var(--ink-600); }
+        .pass-toggle i { width: 16px; height: 16px; }
 
-        .password-toggle:hover {
-            color: var(--text-secondary);
-        }
-
-        .password-toggle i {
-            width: 18px;
-            height: 18px;
-        }
-
-        /* ===== Form Options ===== */
         .form-options {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 24px;
+            margin-bottom: 22px;
         }
-
-        .checkbox-wrap {
+        .check-wrap {
             display: flex;
             align-items: center;
             gap: 8px;
             cursor: pointer;
         }
-
-        .checkbox-wrap input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-            accent-color: var(--brand-yellow);
+        .check-wrap input[type="checkbox"] {
+            width: 15px; height: 15px;
+            accent-color: var(--primary-700);
             cursor: pointer;
         }
-
-        .checkbox-label {
-            font-size: 13px;
-            color: var(--text-secondary);
-            user-select: none;
-        }
-
+        .check-label { font-size: 13px; color: var(--ink-600); }
         .forgot-link {
             font-size: 13px;
-            color: var(--brand-indigo);
+            color: var(--primary-500);
             text-decoration: none;
             font-weight: 500;
-            transition: color 0.2s ease;
         }
+        .forgot-link:hover { color: var(--primary-700); text-decoration: underline; }
 
-        .forgot-link:hover {
-            color: var(--brand-yellow);
-        }
-
-        /* ===== Submit Button ===== */
         .btn-submit {
             width: 100%;
-            padding: 16px 24px;
+            padding: 14px 24px;
             border: none;
-            border-radius: 16px;
-            background: linear-gradient(135deg, #FACC15, #EAB308);
-            color: #0B0F19;
-            font-size: 15px;
-            font-weight: 700;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            border-radius: var(--radius-sm);
+            background: var(--primary-700);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            font-family: var(--font-body);
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 25px rgba(250, 204, 21, 0.12);
-            position: relative;
-            overflow: hidden;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(29, 78, 216, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
         }
-
         .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 40px rgba(250, 204, 21, 0.25);
+            background: var(--primary-500);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25);
+        }
+        .btn-submit i { width: 18px; height: 18px; }
+
+        .auth-foot {
+            text-align: center;
+            margin-top: 22px;
+            padding-top: 18px;
+            border-top: 1px solid var(--line-200);
+        }
+        .auth-foot p { font-size: 13px; color: var(--ink-600); }
+        .auth-foot a { color: var(--primary-500); text-decoration: none; font-weight: 600; }
+        .auth-foot a:hover { color: var(--primary-700); text-decoration: underline; }
+
+        .admin-login-link {
+            text-align: center;
+            margin-top: 12px;
+            font-size: 12px;
+        }
+        .admin-login-link a {
+            color: #94A3B8;
+            text-decoration: none;
+        }
+        .admin-login-link a:hover {
+            color: var(--ink-600);
+            text-decoration: underline;
         }
 
-        .btn-submit:active {
-            transform: translateY(0);
+        /* ===== Right: Ilustrasi ===== */
+        .auth-illustration {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1D4ED8 0%, #1E3A8A 100%);
+            position: relative;
+            overflow: hidden;
+            padding: 40px;
         }
-
-        .btn-submit::after {
+        .auth-illustration::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            background-size: 200% 100%;
-            animation: shimmer 3s ease-in-out infinite;
-            pointer-events: none;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 200"><path d="M0 100 Q 50 80, 100 100 T 200 100 T 300 100 T 400 100" stroke="rgba(255,255,255,0.05)" fill="none" stroke-width="2" stroke-dasharray="8 8"/></svg>') repeat;
+            background-size: 400px 200px;
+            opacity: 0.3;
         }
-
-        .btn-submit i {
-            width: 18px;
-            height: 18px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .btn-submit span {
-            position: relative;
-            z-index: 1;
-        }
-
-        /* ===== Auth Footer ===== */
-        .auth-footer {
+        .auth-illustration .ill-content {
             text-align: center;
-            margin-top: 24px;
-            padding-top: 20px;
-            border-top: 1px solid var(--border-muted);
+            color: #fff;
+            position: relative;
+            z-index: 1;
+            max-width: 400px;
         }
-
-        .auth-footer p {
-            font-size: 13px;
-            color: var(--text-muted);
+        .auth-illustration .ill-content i {
+            width: 64px; height: 64px;
+            margin-bottom: 20px;
+            opacity: 0.8;
         }
-
-        .auth-footer a {
-            color: var(--brand-yellow);
-            text-decoration: none;
-            font-weight: 600;
-            transition: color 0.2s ease;
+        .auth-illustration .ill-content h2 {
+            font-family: var(--font-heading);
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
         }
-
-        .auth-footer a:hover {
-            color: var(--brand-amber);
+        .auth-illustration .ill-content .ill-quote {
+            font-size: 16px;
+            line-height: 1.6;
+            opacity: 0.85;
+            margin-bottom: 24px;
         }
-
-        /* ===== Theme Toggle on Login ===== */
-        .theme-toggle-login {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10;
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            background: var(--bg-card);
-            border: 1px solid var(--border-color);
-            display: flex;
+        .auth-illustration .ill-content .ill-stats {
+            display: inline-flex;
             align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: var(--text-secondary);
-            transition: all 0.25s ease;
-            backdrop-filter: blur(12px);
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border-radius: var(--radius-full);
+            font-size: 14px;
+            font-weight: 600;
         }
-
-        .theme-toggle-login:hover {
-            border-color: rgba(250, 204, 21, 0.3);
-            color: var(--brand-yellow);
-            box-shadow: 0 0 20px rgba(250, 204, 21, 0.08);
-        }
-
-        .theme-toggle-login i {
-            width: 20px;
-            height: 20px;
-        }
-
-        /* ===== Scrollbar ===== */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
 
         /* ===== Responsive ===== */
-        @media (max-width: 480px) {
-            .auth-card {
-                padding: 28px 20px;
-                border-radius: 20px;
-            }
-            .auth-container {
-                padding: 12px;
-            }
+        @media (max-width: 768px) {
+            .auth-illustration { display: none; }
+            .auth-form-side { padding: 24px 16px; }
         }
     </style>
 </head>
 <body>
 
-    <!-- Background Orbs -->
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
+    <div class="auth-container">
+        <!-- LEFT: Form Login -->
+        <div class="auth-form-side">
+            <div class="auth-form-inner">
+                <a href="../index.php" class="auth-logo">
+                    <img src="../assets/Logo.png" alt="RoKenAI">
+                    <span>RoKen<span class="accent">AI</span></span>
+                </a>
 
-    <!-- Theme Toggle -->
-    <button class="theme-toggle-login" id="themeToggleLogin" aria-label="Toggle theme">
-        <i data-lucide="moon" id="themeIconLogin"></i>
-    </button>
-
-    <!-- Auth Container -->
-    <div class="auth-container">            <a href="../index.php" class="back-home">
-                <i data-lucide="arrow-left"></i>
-                <span data-i18n="auth.backToHome">Back to Home</span>
-            </a>
-
-        <div class="auth-card">
-
-            <!-- Logo -->
-            <a href="../index.php" class="auth-logo">
-                <img src="../assets/Logo.png" alt="RoKenAI Logo">
-                <span>RoKenAI</span>
-            </a>
-
-            <!-- Header -->
-            <div class="auth-header">
-                <h1 data-i18n="auth.welcomeBack">Welcome Back</h1>
-                <p data-i18n="auth.signInDesc">Sign in to access your AI-powered road inspection dashboard.</p>
-            </div>
-
-            <!-- Error Alert -->
-            <?php if (!empty($error)): ?>
-                <div class="alert alert-error">
-                    <i data-lucide="circle-alert"></i>
-                    <span><?= htmlspecialchars($error) ?></span>
+                <div class="auth-head">
+                    <h1>Selamat Datang</h1>
+                    <p>Masuk untuk melaporkan dan memantau perbaikan jalan.</p>
                 </div>
-            <?php endif; ?>
 
-            <!-- Success/Info from register -->
-            <?php if (isset($_GET['registered'])): ?>
-                <div class="alert alert-success">
+                <?php if (!empty($error)): ?>
+                    <div class="alert alert-error">
+                        <i data-lucide="circle-alert"></i>
+                        <span><?= htmlspecialchars($error) ?></span>
+                    </div>
+                <?php endif; ?>
+
+                <?php if (isset($_GET['registered'])): ?>
+                    <div class="alert alert-success">
+                        <i data-lucide="check-circle-2"></i>
+                        <span>Akun berhasil dibuat! Silakan masuk.</span>
+                    </div>
+                <?php endif; ?>
+
+                <form method="POST" action="">
+                    <div class="form-group">
+                        <label for="username">Nama Pengguna atau Email</label>
+                        <div class="input-wrap">
+                            <span class="input-icon"><i data-lucide="user"></i></span>
+                            <input class="field-input" type="text" id="username" name="username" placeholder="Masukkan nama pengguna atau email" value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" required autocomplete="username">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Kata Sandi</label>
+                        <div class="input-wrap">
+                            <span class="input-icon"><i data-lucide="lock"></i></span>
+                            <input class="field-input" type="password" id="password" name="password" placeholder="Masukkan kata sandi" required autocomplete="current-password">
+                            <button type="button" class="pass-toggle" id="togglePass" onclick="togglePassword()" tabindex="-1" aria-label="Toggle visibility">
+                                <i data-lucide="eye" id="passIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="check-wrap">
+                            <input type="checkbox" name="remember" id="remember">
+                            <span class="check-label">Ingat saya</span>
+                        </label>
+                        <a href="#" class="forgot-link">Lupa password?</a>
+                    </div>
+
+                    <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
+                    <button type="submit" name="login" class="btn-submit">
+                        <i data-lucide="log-in"></i>
+                        Masuk
+                    </button>
+                </form>
+
+                <div class="auth-foot">
+                    <p>Belum punya akun? <a href="register.php">Daftar</a></p>
+                </div>
+                <div class="admin-login-link">
+                    <a href="#">Masuk sebagai Admin</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Ilustrasi -->
+        <div class="auth-illustration">
+            <div class="ill-content">
+                <i data-lucide="route"></i>
+                <h2>RoKenAI</h2>
+                <div class="ill-quote">
+                    "Laporkan jalan rusak dalam hitungan detik.<br>
+                    AI kami yang verifikasi,<br>
+                    pemerintah yang tindak lanjuti."
+                </div>
+                <div class="ill-stats">
                     <i data-lucide="check-circle-2"></i>
-                    <span>Account created successfully! Please sign in.</span>
+                    1.200+ laporan sudah ditindaklanjuti
                 </div>
-            <?php endif; ?>
-
-            <!-- Login Form -->
-            <form method="POST" action="">
-                <div class="form-group">
-                    <label for="username" data-i18n="auth.usernameOrEmail">Username or Email</label>
-                    <div class="form-input-wrap">
-                        <span class="input-icon"><i data-lucide="user"></i></span>
-                        <input class="form-input" type="text" id="username" name="username" data-i18n="auth.usernamePlaceholder" placeholder="Enter your username or email" value="<?= htmlspecialchars($_POST['username'] ?? '') ?>" required autocomplete="username">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="password" data-i18n="auth.password">Password</label>
-                    <div class="form-input-wrap">
-                        <span class="input-icon"><i data-lucide="lock"></i></span>
-                        <input class="form-input" type="password" id="password" name="password" data-i18n="auth.passwordPlaceholder" placeholder="Enter your password" required autocomplete="current-password">
-                        <button type="button" class="password-toggle" id="togglePass" onclick="togglePassword()" tabindex="-1" aria-label="Toggle password visibility">
-                            <i data-lucide="eye" id="passIcon"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <div class="form-options">
-                    <label class="checkbox-wrap">
-                        <input type="checkbox" name="remember" id="remember">
-                        <span class="checkbox-label" data-i18n="auth.rememberMe">Remember me</span>
-                    </label>
-                    <a href="#" class="forgot-link" data-i18n="auth.forgotPassword">Forgot password?</a>
-                </div>
-
-                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?>">
-                <button type="submit" name="login" class="btn-submit">
-                    <i data-lucide="log-in"></i>
-                    <span data-i18n="auth.signIn">Sign In</span>
-                </button>
-            </form>
-
-            <!-- Footer -->
-            <div class="auth-footer">
-                <p><span data-i18n="auth.noAccount">Don't have an account?</span> <a href="register.php" data-i18n="auth.createOne">Create one</a></p>
             </div>
-
         </div>
     </div>
 
     <script>
         lucide.createIcons();
 
-        // ===== Theme Toggle =====
-        function getTheme() {
-            return localStorage.getItem('roken-theme') || 'dark';
-        }
-
-        function setTheme(theme) {
-            const html = document.documentElement;
-            const icon = document.getElementById('themeIconLogin');
-            if (theme === 'light') {
-                html.setAttribute('data-theme', 'light');
-                icon.setAttribute('data-lucide', 'sun');
-                document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#F5F7FA');
-            } else {
-                html.removeAttribute('data-theme');
-                icon.setAttribute('data-lucide', 'moon');
-                document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#0B0F19');
-            }
-            localStorage.setItem('roken-theme', theme);
-            lucide.createIcons();
-        }
-
-        function toggleTheme() {
-            const current = getTheme();
-            setTheme(current === 'dark' ? 'light' : 'dark');
-        }
-
-        // Apply saved theme on load
-        setTheme(getTheme());
-
-        document.getElementById('themeToggleLogin').addEventListener('click', toggleTheme);
-
-        // ===== Password Toggle =====
         function togglePassword() {
             const pass = document.getElementById('password');
             const icon = document.getElementById('passIcon');
@@ -708,6 +433,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
             lucide.createIcons();
         }
     </script>
-
 </body>
 </html>

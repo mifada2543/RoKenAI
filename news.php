@@ -8,96 +8,49 @@
     <?php include 'partials/link.php'; ?>
     <style>
         .news-page {
-            max-width: 1200px;
+            max-width: 1100px;
             margin: 0 auto;
-            padding: 32px 24px 48px;
+            padding: 24px 24px 48px;
             animation: fadeInUp 0.5s ease;
-        }
-
-        .page-header {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .page-header h1 {
-            font-size: 32px;
-            font-weight: 800;
-            letter-spacing: -0.03em;
-            margin-bottom: 12px;
-        }
-
-        .page-header p {
-            font-size: 15px;
-            color: var(--text-secondary);
-            max-width: 520px;
-            margin: 0 auto;
-            line-height: 1.7;
         }
 
         /* ===== Featured Article ===== */
         .featured-article {
-            background: var(--bg-elevated);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--border-subtle);
-            border-radius: 24px;
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            border: 1px solid rgba(51, 65, 85, 0.3);
+            box-shadow: var(--shadow-md);
             overflow: hidden;
-            margin-bottom: 32px;
+            margin-bottom: 28px;
             display: grid;
             grid-template-columns: 1fr;
-            transition: all 0.35s ease;
+            transition: all 0.3s ease;
         }
-
         .featured-article:hover {
-            border-color: var(--border-hover);
+            box-shadow: var(--shadow-glow);
             transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+            border-color: rgba(37, 99, 235, 0.2);
         }
+        @media (min-width: 768px) { .featured-article { grid-template-columns: 1fr 1fr; } }
 
-        @media (min-width: 768px) {
-            .featured-article {
-                grid-template-columns: 1fr 1fr;
-            }
-        }
-
-        .featured-image {
-            min-height: 240px;
+        .featured-article .f-image {
+            min-height: 260px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, rgba(250,204,21,0.05), rgba(99,102,241,0.08));
+            background: linear-gradient(135deg, rgba(37,99,235,0.04), rgba(124,58,237,0.06));
             position: relative;
             overflow: hidden;
         }
+        .featured-article .f-image i { width: 80px; height: 80px; color: rgba(37, 99, 235, 0.08); }
 
-        .featured-image i {
-            width: 80px;
-            height: 80px;
-            color: rgba(250, 204, 21, 0.15);
-        }
-
-        .featured-image .badge {
-            position: absolute;
-            top: 16px;
-            left: 16px;
-            padding: 4px 12px;
-            border-radius: 100px;
-            background: rgba(250, 204, 21, 0.12);
-            border: 1px solid rgba(250, 204, 21, 0.15);
-            font-size: 10px;
-            font-weight: 600;
-            color: var(--brand-yellow);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .featured-content {
-            padding: 28px;
+        .featured-article .f-content {
+            padding: 32px;
             display: flex;
             flex-direction: column;
             justify-content: center;
         }
-
-        .featured-content .date {
+        .featured-article .f-content .f-date {
             font-size: 11px;
             color: var(--text-muted);
             font-weight: 500;
@@ -106,35 +59,31 @@
             align-items: center;
             gap: 6px;
         }
-
-        .featured-content h2 {
+        .featured-article .f-content h2 {
+            font-family: var(--font-heading);
             font-size: 20px;
             font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 10px;
-            letter-spacing: -0.02em;
         }
-
-        .featured-content p {
+        .featured-article .f-content p {
             font-size: 13px;
             color: var(--text-secondary);
             line-height: 1.7;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
         }
-
-        .featured-content .read-more {
+        .featured-article .f-content .read-more {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             font-size: 13px;
             font-weight: 600;
-            color: var(--brand-yellow);
+            color: var(--primary-light);
             text-decoration: none;
             transition: all 0.2s ease;
         }
-
-        .featured-content .read-more:hover { gap: 10px; }
-        .featured-content .read-more i { width: 16px; height: 16px; }
+        .featured-article .f-content .read-more:hover { gap: 10px; color: var(--primary); }
+        .featured-article .f-content .read-more i { width: 16px; height: 16px; }
 
         /* ===== News Grid ===== */
         .news-grid {
@@ -142,251 +91,211 @@
             grid-template-columns: 1fr;
             gap: 16px;
         }
-
         @media (min-width: 640px) { .news-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (min-width: 1024px) { .news-grid { grid-template-columns: repeat(3, 1fr); } }
 
-        .news-card {
+        .n-card {
             background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border-subtle);
-            border-radius: 20px;
+            border-radius: var(--radius-lg);
+            border: 1px solid rgba(51, 65, 85, 0.3);
+            box-shadow: var(--shadow-card);
             padding: 24px;
             cursor: pointer;
             transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
         }
-
-        .news-card:hover {
-            border-color: var(--border-hover);
+        .n-card:hover {
+            border-color: rgba(37, 99, 235, 0.2);
+            box-shadow: var(--shadow-glow);
             transform: translateY(-3px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
         }
-
-        .news-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.12), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        .news-card:hover::before { opacity: 1; }
-
-        .news-card .news-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+        .n-card .n-icon {
+            width: 42px; height: 42px;
+            border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 14px;
         }
-
-        .news-card .news-icon i { width: 20px; height: 20px; }
-
-        .news-card .news-date {
+        .n-card .n-icon i { width: 20px; height: 20px; }
+        .n-card .n-date {
             font-size: 10px;
             font-weight: 600;
             color: var(--text-muted);
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
         }
-
-        .news-card h3 {
-            font-size: 15px;
+        .n-card h3 {
+            font-family: var(--font-heading);
+            font-size: 16px;
             font-weight: 700;
             color: var(--text-primary);
             margin-bottom: 6px;
             line-height: 1.4;
         }
-
-        .news-card p {
+        .n-card p {
             font-size: 12px;
             color: var(--text-secondary);
             line-height: 1.6;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
-
-        .news-card .news-tag {
+        .n-card .n-tag {
             display: inline-block;
-            padding: 3px 10px;
-            border-radius: 100px;
+            padding: 2px 10px;
+            border-radius: var(--radius-full);
             font-size: 10px;
             font-weight: 600;
             text-transform: uppercase;
         }
-
-        .news-tag.release { background: rgba(250, 204, 21, 0.1); color: var(--brand-yellow); }
-        .news-tag.update { background: rgba(99, 102, 241, 0.1); color: var(--brand-indigo); }
-        .news-tag.event { background: rgba(34, 197, 94, 0.1); color: #22C55E; }
-        .news-tag.tutorial { background: rgba(239, 68, 68, 0.1); color: #EF4444; }
+        .n-tag.release { background: rgba(37,99,235,0.1); color: var(--primary-light); }
+        .n-tag.update { background: rgba(124,58,237,0.1); color: var(--purple); }
+        .n-tag.event { background: rgba(34,197,94,0.1); color: var(--success); }
+        .n-tag.tutorial { background: rgba(239,68,68,0.1); color: var(--danger); }
 
         /* ===== Newsletter ===== */
         .newsletter-card {
-            margin-top: 32px;
-            background: linear-gradient(135deg, rgba(250,204,21,0.04), rgba(99,102,241,0.04));
-            border: 1px solid var(--border-subtle);
-            border-radius: 24px;
-            padding: 32px;
+            margin-top: 28px;
+            background: var(--bg-card);
+            border-radius: var(--radius-xl);
+            border: 1px solid rgba(51, 65, 85, 0.3);
+            box-shadow: var(--shadow-md);
+            padding: 36px;
             text-align: center;
         }
+        .newsletter-card h3 { font-family: var(--font-heading); font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+        .newsletter-card p { font-size: 13px; color: var(--text-secondary); margin-bottom: 18px; }
 
-        .newsletter-card h3 {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .newsletter-card p {
-            font-size: 13px;
-            color: var(--text-secondary);
-            margin-bottom: 20px;
-        }
-
-        .newsletter-form {
+        .newsletter-card .nl-form {
             display: flex;
             gap: 10px;
-            max-width: 440px;
+            max-width: 420px;
             margin: 0 auto;
         }
-
-        .newsletter-form input {
+        .newsletter-card .nl-form input {
             flex: 1;
-            padding: 12px 18px;
-            border-radius: 12px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-subtle);
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(51, 65, 85, 0.3);
             color: var(--text-primary);
-            font-size: 14px;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 13px;
+            font-family: var(--font-body);
             outline: none;
-            transition: all 0.25s ease;
+            transition: all 0.2s ease;
         }
-
-        .newsletter-form input:focus {
-            border-color: rgba(250, 204, 21, 0.3);
-            box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.06);
+        .newsletter-card .nl-form input:focus {
+            border-color: rgba(37, 99, 235, 0.4);
         }
-
-        .newsletter-form button {
-            padding: 12px 24px;
-            border-radius: 12px;
+        .newsletter-card .nl-form button {
+            padding: 10px 24px;
+            border-radius: var(--radius-sm);
             border: none;
-            background: linear-gradient(135deg, #FACC15, #EAB308);
-            color: #0B0F19;
-            font-weight: 700;
-            font-size: 14px;
+            background: var(--primary);
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
             cursor: pointer;
-            transition: all 0.25s ease;
-            white-space: nowrap;
+            transition: all 0.2s ease;
+            font-family: var(--font-body);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
         }
-
-        .newsletter-form button:hover {
+        .newsletter-card .nl-form button:hover {
+            background: #1D4ED8;
             transform: translateY(-1px);
-            box-shadow: 0 4px 20px rgba(250, 204, 21, 0.25);
         }
-
         @media (max-width: 480px) {
-            .newsletter-form { flex-direction: column; }
+            .news-page { padding: 16px; }
+            .newsletter-card .nl-form { flex-direction: column; }
+            .featured-article .f-content { padding: 20px; }
+            .newsletter-card { padding: 24px; }
         }
     </style>
 </head>
 <body>
     <?php include 'partials/header.php'; ?>
     <div id="content-wrapper">
-        <main class="news-page">
-
-            <div class="page-header">
-                <h1 class="gradient-text" data-i18n="news.title">News & Updates</h1>
-                <p data-i18n="news.desc">Stay up to date with the latest RoKenAI features, research breakthroughs, and community events.</p>
+        <main class="news-page page-enter">
+            <div class="page-heading">
+                <h1><span class="gradient-text">Berita &amp; Pembaruan</span></h1>
+                <p>Ikuti perkembangan fitur RoKenAI terbaru, terobosan penelitian, dan acara komunitas.</p>
             </div>
 
-            <!-- Featured Article -->
+            <!-- Featured -->
             <div class="featured-article">
-                <div class="featured-image">
+                <div class="f-image">
                     <i data-lucide="sparkles"></i>
-                    <span class="badge" data-i18n="news.featured">Featured</span>
+                    <span class="badge" style="position:absolute;top:16px;left:16px;">Unggulan</span>
                 </div>
-                <div class="featured-content">
-                    <div class="date"><i data-lucide="calendar" style="width:14px;height:14px;"></i> June 20, 2026</div>
-                    <h2>YOLOv8 + OpenVINO: 3x Faster Inference</h2>
-                    <p>We've rolled out a major performance update. By converting YOLOv8 models to OpenVINO format, inference speed has increased by over 300% on supported hardware — enabling real-time road damage detection at 60+ FPS.</p>
+                <div class="f-content">
+                    <div class="f-date"><i data-lucide="calendar" style="width:14px;height:14px;"></i> 20 Juni 2026</div>
+                    <h2>YOLOv8 + OpenVINO: Inferensi 3x Lebih Cepat</h2>
+                    <p>Kami merilis pembaruan performa besar. Dengan mengonversi model YOLOv8 ke format OpenVINO, kecepatan inferensi meningkat hingga 300% pada hardware yang didukung.</p>
                     <a href="chat.php?prompt=Tell+me+about+the+YOLOv8+OpenVINO+performance+update" class="read-more">
-                        <span data-i18n="news.readMore">Read more</span> <i data-lucide="arrow-right"></i>
+                        Baca selengkapnya <i data-lucide="arrow-right"></i>
                     </a>
                 </div>
             </div>
 
-            <!-- News Grid -->
+            <!-- Grid -->
             <div class="news-grid">
-
-                <div class="news-card">
-                    <div class="news-icon" style="background:rgba(250,204,21,0.1);color:var(--brand-yellow);"><i data-lucide="rocket"></i></div>
-                    <div class="news-date">June 15, 2026</div>
+                <div class="n-card">
+                    <div class="n-icon" style="background:rgba(37,99,235,0.12);color:var(--primary-light);"><i data-lucide="rocket"></i></div>
+                    <div class="n-date">15 Juni 2026</div>
                     <h3>RoKenAI v2.0 Launch</h3>
-                    <p>Introducing our biggest update yet — Bento Grid UI, AI chat workspace, real-time detection pipeline, and enhanced report generation with PDF export.</p>
-                    <span class="news-tag release">Release</span>
+                    <p>Pembaruan terbesar kami — UI baru, ruang obrolan AI, pipeline deteksi real-time, dan pembuatan laporan dengan ekspor PDF.</p>
+                    <span class="n-tag release">Rilis</span>
                 </div>
-
-                <div class="news-card">
-                    <div class="news-icon" style="background:rgba(99,102,241,0.1);color:var(--brand-indigo);"><i data-lucide="database"></i></div>
-                    <div class="news-date">June 10, 2026</div>
-                    <h3>Road Damage Dataset v2 Released</h3>
-                    <p>Expanded dataset with 15,000+ annotated road images covering 8 damage categories. Includes night-time and wet-surface conditions for robust model training.</p>
-                    <span class="news-tag update">Update</span>
+                <div class="n-card">
+                    <div class="n-icon" style="background:rgba(124,58,237,0.12);color:var(--purple);"><i data-lucide="database"></i></div>
+                    <div class="n-date">10 Juni 2026</div>
+                    <h3>Dataset Kerusakan Jalan v2</h3>
+                    <p>Dataset diperluas dengan 15.000+ gambar jalan beranotasi mencakup 8 kategori kerusakan. Termasuk kondisi malam dan permukaan basah.</p>
+                    <span class="n-tag update">Pembaruan</span>
                 </div>
-
-                <div class="news-card">
-                    <div class="news-icon" style="background:rgba(34,197,94,0.1);color:#22C55E;"><i data-lucide="users"></i></div>
-                    <div class="news-date">June 5, 2026</div>
-                    <h3>Community Webinar: Road AI</h3>
-                    <p>Join our upcoming webinar on July 12 where we'll discuss best practices for deploying YOLOv8-based road inspection systems at scale.</p>
-                    <span class="news-tag event">Event</span>
+                <div class="n-card">
+                    <div class="n-icon" style="background:rgba(34,197,94,0.12);color:var(--success);"><i data-lucide="users"></i></div>
+                    <div class="n-date">5 Juni 2026</div>
+                    <h3>Webinar Komunitas: Road AI</h3>
+                    <p>Ikuti webinar kami pada 12 Juli untuk diskusi praktik terbaik dalam penerapan sistem inspeksi jalan berbasis YOLOv8.</p>
+                    <span class="n-tag event">Acara</span>
                 </div>
-
-                <div class="news-card">
-                    <div class="news-icon" style="background:rgba(239,68,68,0.1);color:#EF4444;"><i data-lucide="book-open"></i></div>
-                    <div class="news-date">May 28, 2026</div>
-                    <h3>New Tutorial: Training from Scratch</h3>
-                    <p>Step-by-step guide covering dataset preparation, YOLOv8 configuration, training pipeline, and model evaluation for road damage detection.</p>
-                    <span class="news-tag tutorial">Tutorial</span>
+                <div class="n-card">
+                    <div class="n-icon" style="background:rgba(239,68,68,0.12);color:var(--danger);"><i data-lucide="book-open"></i></div>
+                    <div class="n-date">28 Mei 2026</div>
+                    <h3>Tutorial Baru: Training YOLOv8</h3>
+                    <p>Panduan langkah demi langkah mencakup persiapan dataset, konfigurasi YOLOv8, pipeline pelatihan, dan evaluasi model.</p>
+                    <span class="n-tag tutorial">Tutorial</span>
                 </div>
-
-                <div class="news-card">
-                    <div class="news-icon" style="background:rgba(250,204,21,0.1);color:var(--brand-yellow);"><i data-lucide="cpu"></i></div>
-                    <div class="news-date">May 20, 2026</div>
-                    <h3>OpenVINO Integration Complete</h3>
-                    <p>YOLOv8 models can now be exported to OpenVINO IR format for optimized inference on Intel CPUs, GPUs, and VPUs with minimal accuracy loss.</p>
-                    <span class="news-tag update">Update</span>
+                <div class="n-card">
+                    <div class="n-icon" style="background:rgba(37,99,235,0.12);color:var(--primary-light);"><i data-lucide="cpu"></i></div>
+                    <div class="n-date">20 Mei 2026</div>
+                    <h3>Integrasi OpenVINO Selesai</h3>
+                    <p>Model YOLOv8 kini dapat diekspor ke format OpenVINO IR untuk inferensi yang dioptimalkan pada CPU, GPU, dan VPU Intel.</p>
+                    <span class="n-tag update">Pembaruan</span>
                 </div>
-
-                <div class="news-card">
-                    <div class="news-icon" style="background:rgba(99,102,241,0.1);color:var(--brand-indigo);"><i data-lucide="upload"></i></div>
-                    <div class="news-date">May 12, 2026</div>
-                    <h3>Batch Upload & Processing</h3>
-                    <p>New batch processing feature allows uploading and analyzing multiple road images simultaneously. Supports ZIP archives and bulk folder uploads.</p>
-                    <span class="news-tag release">Release</span>
+                <div class="n-card">
+                    <div class="n-icon" style="background:rgba(124,58,237,0.12);color:var(--purple);"><i data-lucide="upload"></i></div>
+                    <div class="n-date">12 Mei 2026</div>
+                    <h3>Upload &amp; Pemrosesan Batch</h3>
+                    <p>Fitur pemrosesan batch baru memungkinkan upload dan analisis beberapa gambar jalan secara bersamaan. Mendukung arsip ZIP.</p>
+                    <span class="n-tag release">Rilis</span>
                 </div>
-
             </div>
 
             <!-- Newsletter -->
             <div class="newsletter-card">
-                <i data-lucide="mail" style="width:32px;height:32px;color:var(--brand-yellow);margin-bottom:12px;"></i>
-                <h3 data-i18n="news.stayUpdated">Stay Updated</h3>
-                <p data-i18n="news.newsletterDesc">Get the latest RoKenAI news, tutorials, and updates delivered to your inbox.</p>
-                <form class="newsletter-form" onsubmit="alert('Subscribed! (Demo)'); return false;">
-                    <input type="email" data-i18n="news.newsletterPlaceholder" placeholder="Enter your email address" required>
-                    <button type="submit" data-i18n="news.subscribe">Subscribe</button>
+                <i data-lucide="mail" style="width:28px;height:28px;color:var(--primary-light);margin-bottom:10px;"></i>
+                <h3>Tetap Terupdate</h3>
+                <p>Dapatkan berita, tutorial, dan pembaruan RoKenAI terbaru di kotak masuk Anda.</p>
+                <form class="nl-form" onsubmit="alert('Berhasil berlangganan! (Demo)'); return false;">
+                    <input type="email" placeholder="Masukkan alamat email" required>
+                    <button type="submit">Langganan</button>
                 </form>
             </div>
-
         </main>
     </div>
+
+    <?php include 'partials/footer.php'; ?>
 
     <script>
         lucide.createIcons();

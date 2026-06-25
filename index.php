@@ -1,675 +1,523 @@
 <?php session_name('RoKenAI'); ?>
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoKenAI | Dashboard</title>
+    <title>RoKenAI | Platform Pelaporan Jalan Rusak berbasis AI</title>
     <?php include 'partials/link.php'; ?>
     <style>
-        /* ===== Dashboard Layout ===== */
-        .dashboard {
-            max-width: 1280px;
+        /* ================================================================
+           RoKenAI — Landing Page (sesuai desain.md 5.1)
+           ================================================================ */
+
+        .landing {
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 32px 24px 48px;
+            padding: 24px 24px 48px;
             animation: fadeInUp 0.5s ease;
         }
 
-        /* ===== Hero Section ===== */
+        /* ===== HERO SECTION ===== */
         .hero-section {
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            align-items: center;
+            padding: 32px 0 20px;
+        }
+        @media (min-width: 1024px) {
+            .hero-section {
+                flex-direction: row;
+                align-items: center;
+                gap: 60px;
+            }
+            .hero-section .col-left { flex: 1.1; }
+            .hero-section .col-right { flex: 0.9; }
+        }
+
+        .hero-content h1 {
+            font-family: var(--font-heading);
+            font-size: clamp(32px, 5vw, 44px);
+            font-weight: 700;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            color: var(--ink-900);
+            margin-bottom: 16px;
+        }
+        .hero-content h1 .highlight {
+            color: var(--primary-700);
+        }
+        .hero-content .hero-desc {
+            font-size: 15px;
+            color: var(--ink-600);
+            line-height: 1.7;
+            max-width: 480px;
+            margin-bottom: 28px;
+        }
+
+        .hero-badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 24px;
+            margin-top: 32px;
+        }
+        .hero-stat {
             text-align: center;
+        }
+        .hero-stat .hs-num {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-700);
+        }
+        .hero-stat .hs-label {
+            font-size: 12px;
+            color: var(--ink-600);
+        }
+
+        /* ===== Hero Image Placeholder ===== */
+        .hero-image-wrap {
+            width: 100%;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            background: var(--primary-100);
+            border: 1px solid var(--line-200);
+            box-shadow: var(--shadow-lg);
+            aspect-ratio: 4/3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .hero-image-wrap .hi-placeholder {
+            text-align: center;
+            color: var(--primary-700);
+        }
+        .hero-image-wrap .hi-placeholder i {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 12px;
+        }
+        .hero-image-wrap .hi-placeholder p {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        /* Bounding box overlay simulasi */
+        .hero-image-wrap .bbox-overlay {
+            position: absolute;
+            border: 2px solid var(--marka-400);
+            background: rgba(250, 204, 21, 0.1);
+            border-radius: 4px;
+            pointer-events: none;
+        }
+        .hero-image-wrap .bbox-overlay.b1 {
+            top: 30%; left: 15%; width: 35%; height: 40%;
+        }
+        .hero-image-wrap .bbox-overlay.b2 {
+            top: 50%; right: 20%; width: 25%; height: 30%;
+        }
+        .hero-image-wrap .bbox-label {
+            position: absolute;
+            background: var(--marka-400);
+            color: #0F172A;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            pointer-events: none;
+        }
+        .hero-image-wrap .bbox-label.l1 { top: calc(30% - 20px); left: 15%; }
+        .hero-image-wrap .bbox-label.l2 { top: calc(50% - 20px); right: 20%; }
+
+        /* ===== CARA KERJA (3 Langkah) ===== */
+        .how-it-works {
+            margin-top: 60px;
+            text-align: center;
+        }
+        .how-it-works h2 {
+            font-family: var(--font-heading);
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--ink-900);
+            margin-bottom: 8px;
+        }
+        .how-it-works > p {
+            color: var(--ink-600);
             margin-bottom: 40px;
         }
 
-        .hero-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 16px;
-            border-radius: 100px;
-            background: rgba(250, 204, 21, 0.08);
-            border: 1px solid rgba(250, 204, 21, 0.15);
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--brand-yellow);
-            margin-bottom: 20px;
-        }
-
-        .hero-title {
-            font-size: 36px;
-            font-weight: 800;
-            line-height: 1.15;
-            letter-spacing: -0.03em;
-            margin-bottom: 16px;
-            max-width: 720px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        @media (min-width: 768px) {
-            .hero-title {
-                font-size: 48px;
-            }
-        }
-
-        .hero-subtitle {
-            font-size: 16px;
-            color: var(--text-secondary);
-            max-width: 560px;
-            margin: 0 auto;
-            line-height: 1.7;
-        }
-
-        /* ===== Bento Grid ===== */
-        .bento-grid {
+        .steps-grid {
             display: grid;
             grid-template-columns: 1fr;
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
+            gap: 24px;
         }
+        @media (min-width: 640px) { .steps-grid { grid-template-columns: repeat(3, 1fr); } }
 
-        @media (min-width: 768px) {
-            .bento-grid {
-                grid-template-columns: 2fr 1fr;
-            }
-        }
-
-        @media (min-width: 1024px) {
-            .bento-grid {
-                grid-template-columns: 3fr 2fr;
-            }
-        }
-
-        /* ===== Bento Card Base ===== */
-        .bento-card {
-            background: var(--bg-elevated);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-subtle);
-            border-radius: 24px;
-            padding: 28px;
-            transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .bento-card:hover {
-            border-color: var(--border-hover);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
-        }
-
-        .bento-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.2), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .bento-card:hover::before {
-            opacity: 1;
-        }
-
-        /* ===== Main Action Card (Bento 1) ===== */
-        .bento-main {
-            min-height: 340px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        .bento-main .card-label {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: 100px;
-            background: rgba(250, 204, 21, 0.1);
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--brand-yellow);
-            letter-spacing: 0.03em;
-            text-transform: uppercase;
-            width: fit-content;
-        }
-
-        .bento-main h2 {
-            font-size: 26px;
-            font-weight: 700;
-            color: var(--text-primary);
-            margin: 20px 0 12px;
-            letter-spacing: -0.02em;
-        }
-
-        .bento-main p {
-            font-size: 14px;
-            color: var(--text-secondary);
-            line-height: 1.7;
-            max-width: 480px;
-        }
-
-        .bento-main .action-btn {
-            display: block;
-            width: 100%;
-            padding: 16px 24px;
-            background: linear-gradient(135deg, #FACC15, #EAB308);
-            color: #0B0F19;
-            font-weight: 700;
-            font-size: 15px;
-            border: none;
-            border-radius: 16px;
-            cursor: pointer;
-            text-decoration: none;
+        .step-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--line-200);
+            box-shadow: var(--shadow-card);
+            padding: 32px 24px;
             text-align: center;
             transition: all 0.3s ease;
-            box-shadow: 0 0 25px rgba(250, 204, 21, 0.12);
-            position: relative;
-            overflow: hidden;
+        }
+        .step-card:hover {
+            border-color: var(--primary-100);
+            box-shadow: var(--shadow-glow);
+            transform: translateY(-3px);
+        }
+        .step-card .s-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: var(--radius-lg);
+            background: var(--primary-100);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            color: var(--primary-700);
+        }
+        .step-card .s-icon i { width: 28px; height: 28px; }
+        .step-card .s-num {
+            font-family: var(--font-heading);
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--primary-500);
+            margin-bottom: 4px;
+        }
+        .step-card h3 {
+            font-family: var(--font-heading);
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--ink-900);
+            margin-bottom: 6px;
+        }
+        .step-card p {
+            font-size: 13px;
+            color: var(--ink-600);
+            line-height: 1.6;
         }
 
-        .bento-main .action-btn:hover {
+        /* ===== STATISTIK ===== */
+        .stats-section {
+            margin-top: 60px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+        @media (max-width: 640px) { .stats-section { grid-template-columns: 1fr; } }
+
+        .stat-card-landing {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--line-200);
+            box-shadow: var(--shadow-card);
+            padding: 28px 24px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .stat-card-landing:hover {
+            border-color: var(--primary-100);
+            box-shadow: var(--shadow-glow);
             transform: translateY(-2px);
-            box-shadow: 0 0 40px rgba(250, 204, 21, 0.25);
         }
-
-        .bento-main .action-btn:active {
-            transform: translateY(0);
+        .stat-card-landing .s-num {
+            font-family: var(--font-heading);
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary-700);
         }
-
-        .bento-main .action-btn::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            background-size: 200% 100%;
-            animation: shimmer 3s ease-in-out infinite;
-        }
-
-        /* ===== Right Column: Stats + Recent ===== */
-        .bento-right {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        /* ===== Stats Card ===== */
-        .bento-stats {
-            padding: 24px;
-        }
-
-        .stats-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .stats-header h3 {
+        .stat-card-landing .s-label {
             font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            letter-spacing: 0.02em;
-            text-transform: uppercase;
+            color: var(--ink-600);
+            margin-top: 4px;
         }
 
-        .stats-header .live-indicator {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 11px;
-            font-weight: 500;
-            color: #22C55E;
+        /* ===== FITUR ===== */
+        .features-section {
+            margin-top: 60px;
         }
+        .features-section h2 {
+            font-family: var(--font-heading);
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--ink-900);
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        @media (min-width: 640px) { .features-grid { grid-template-columns: repeat(3, 1fr); } }
 
-        .stat-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-muted);
+        /* ===== LAPORAN TERBARU ===== */
+        .recent-section {
+            margin-top: 60px;
         }
-
-        .stat-item:last-child {
-            border-bottom: none;
-        }
-
-        .stat-label {
-            font-size: 13px;
-            color: var(--text-muted);
-        }
-
-        .stat-value {
-            font-size: 13px;
-            font-weight: 600;
-            font-family: 'SF Mono', 'JetBrains Mono', monospace;
-        }
-
-        .stat-value.yellow {
-            color: var(--brand-yellow);
-        }
-        .stat-value.indigo {
-            color: var(--brand-indigo);
-        }
-        .stat-value.green {
-            color: #22C55E;
-        }
-        .stat-value.emerald {
-            color: #34D399;
-        }
-
-        /* ===== Model Accuracy Bar ===== */
-        .accuracy-bar-wrap {
-            margin-top: 16px;
-            padding-top: 16px;
-            border-top: 1px solid var(--border-muted);
-        }
-
-        .accuracy-bar-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-bottom: 8px;
-        }
-
-        .accuracy-bar {
-            height: 6px;
-            border-radius: 100px;
-            background: var(--bg-hover);
-            overflow: hidden;
-            position: relative;
-        }
-
-        .accuracy-bar-fill {
-            height: 100%;
-            border-radius: 100px;
-            background: linear-gradient(90deg, #FACC15, #6366F1);
-            width: 94.2%;
-            transition: width 1s ease;
-        }
-
-        /* ===== Recent Inspections Card ===== */
-        .bento-recent {
-            padding: 24px;
-        }
-
-        .recent-header {
+        .recent-section .section-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 16px;
         }
-
-        .recent-header h3 {
-            font-size: 13px;
+        .recent-section .section-header h3 {
+            font-family: var(--font-heading);
+            font-size: 18px;
             font-weight: 600;
-            color: var(--text-secondary);
-            letter-spacing: 0.02em;
-            text-transform: uppercase;
+            color: var(--ink-900);
         }
-
-        .recent-header a {
-            font-size: 12px;
-            color: var(--brand-indigo);
+        .recent-section .section-header a {
+            font-size: 13px;
+            color: var(--primary-500);
             text-decoration: none;
-            font-weight: 500;
-            transition: color 0.2s;
+        }
+        .recent-section .section-header a:hover {
+            color: var(--primary-700);
         }
 
-        .recent-header a:hover {
-            color: var(--brand-yellow);
+        .recent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-
         .recent-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-muted);
+            gap: 14px;
+            padding: 14px 18px;
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--line-200);
+            transition: all 0.2s ease;
         }
-
-        .recent-item:last-child {
-            border-bottom: none;
+        .recent-item:hover {
+            border-color: var(--primary-100);
+            background: #FAFBFC;
         }
-
-        .recent-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+        .recent-item .r-icon {
+            width: 40px; height: 40px; min-width: 40px;
+            border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
         }
+        .recent-item .r-icon i { width: 18px; height: 18px; }
+        .recent-item .r-info { flex: 1; }
+        .recent-item .r-title { font-size: 14px; font-weight: 600; color: var(--ink-900); }
+        .recent-item .r-meta { font-size: 12px; color: #94A3B8; }
 
-        .recent-icon.road {
-            background: rgba(250, 204, 21, 0.1);
-            color: var(--brand-yellow);
-        }
-        .recent-icon.pothole {
-            background: rgba(239, 68, 68, 0.1);
-            color: #EF4444;
-        }
-        .recent-icon.crack {
-            background: rgba(99, 102, 241, 0.1);
-            color: var(--brand-indigo);
-        }
-
-        .recent-icon i {
-            width: 18px;
-            height: 18px;
-        }
-
-        .recent-info {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .recent-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .recent-meta {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 2px;
-        }
-
-        .recent-status {
-            font-size: 10px;
-            font-weight: 600;
-            padding: 3px 10px;
-            border-radius: 100px;
-        }
-
-        .recent-status.completed {
-            background: rgba(34, 197, 94, 0.1);
-            color: #22C55E;
-        }
-
-        .recent-status.processing {
-            background: rgba(250, 204, 21, 0.1);
-            color: var(--brand-yellow);
-        }
-
-        /* ===== Bottom row: extra bento cards ===== */
-        .bento-bottom-row {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
-            max-width: 1200px;
-            margin: 20px auto 0;
-        }
-
-        @media (min-width: 768px) {
-            .bento-bottom-row {
-                grid-template-columns: 1fr 1fr 1fr;
-            }
-        }
-
-        .bento-mini {
-            padding: 20px;
-            min-height: 120px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .bento-mini .mini-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 12px;
-        }
-
-        .bento-mini .mini-icon i {
-            width: 20px;
-            height: 20px;
-        }
-
-        .bento-mini h4 {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-
-        .bento-mini p {
-            font-size: 12px;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        /* ===== Quick Stats ===== */
-        .quick-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
-            max-width: 1200px;
-            margin: 20px auto 0;
-        }
-
-        .quick-stat-card {
-            background: var(--bg-light);
-            backdrop-filter: blur(12px);
-            border: 1px solid var(--border-muted);
-            border-radius: 16px;
-            padding: 18px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-
-        .quick-stat-card:hover {
-            border-color: var(--border-subtle);
-            transform: translateY(-2px);
-        }
-
-        @media (max-width: 640px) {
-            .quick-stats {
-                grid-template-columns: 1fr;
-                gap: 10px;
-            }
-        }
-
-        .quick-stat-number {
-            font-size: 24px;
-            font-weight: 800;
-            letter-spacing: -0.02em;
-        }
-
-        .quick-stat-label {
-            font-size: 11px;
-            color: var(--text-muted);
-            margin-top: 4px;
-            font-weight: 500;
+        @media (max-width: 480px) {
+            .landing { padding: 16px; }
+            .hero-stat .hs-num { font-size: 20px; }
+            .hero-stats { gap: 16px; flex-wrap: wrap; }
         }
     </style>
 </head>
-
 <body>
 
     <?php include 'partials/header.php'; ?>
 
     <div id="content-wrapper">
-        <main class="dashboard">
+        <main class="landing page-enter">
 
-            <!-- Hero Section -->
+            <!-- ===== HERO SECTION (desain.md 5.1) ===== -->
             <div class="hero-section">
-                <div class="hero-badge" data-i18n="dashboard.heroBadge">
-                    <span class="status-dot" style="width:5px;height:5px;"></span>
-                    AI Engine v2.0 • Real-time Inference
+                <!-- LEFT COLUMN -->
+                <div class="col-left">
+                    <div class="hero-content">
+                        <div class="hero-badge-row">
+                            <span class="badge">AI Deteksi Jalan Rusak v2.0</span>
+                        </div>
+
+                        <h1>
+                            Lihat Jalan Rusak?<br>
+                            <span class="highlight">Laporkan dalam Hitungan Detik</span>
+                        </h1>
+
+                        <p class="hero-desc">
+                            RoKenAI menggunakan teknologi Computer Vision (YOLOv8) untuk mendeteksi dan mengklasifikasikan 
+                            kerusakan jalan secara otomatis. Cukup foto, AI kami yang verifikasi.
+                        </p>
+
+                        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+                            <a href="upload.php" class="btn-primary">
+                                <i data-lucide="camera"></i>
+                                Lapor Sekarang
+                            </a>
+                            <a href="#how-it-works" class="btn-secondary">
+                                <i data-lucide="info"></i>
+                                Cara Kerja
+                            </a>
+                        </div>
+
+                        <div class="hero-stats">
+                            <div class="hero-stat">
+                                <div class="hs-num">1.200+</div>
+                                <div class="hs-label">Laporan Ditindaklanjuti</div>
+                            </div>
+                            <div class="hero-stat">
+                                <div class="hs-num">94%</div>
+                                <div class="hs-label">Akurasi Deteksi AI</div>
+                            </div>
+                            <div class="hero-stat">
+                                <div class="hs-num">12ms</div>
+                                <div class="hs-label">Kecepatan Inferensi</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <h1 class="hero-title gradient-text" data-i18n="dashboard.heroTitle">
-                    The Future of Road Infrastructure Inspection
-                </h1>
-                <p class="hero-subtitle" data-i18n="dashboard.heroSubtitle">
-                    Powered by RoKenAI — reconstructing road infrastructure monitoring through deep learning computer vision with YOLOv8.
-                </p>
-            </div>
 
-            <!-- Bento Grid Main -->
-            <div class="bento-grid">
-
-                <!-- Bento 1: Main Action Card (kiri, besar) -->
-                <div class="bento-card bento-main">
-                    <div>
-                        <div class="card-label" data-i18n="dashboard.aiReady">
-                            <i data-lucide="sparkles" style="width:14px;height:14px;"></i>
-                            AI Engine Ready
+                <!-- RIGHT COLUMN — Foto jalan dengan bounding box AI overlay -->
+                <div class="col-right">
+                    <div class="hero-image-wrap">
+                        <div class="hi-placeholder">
+                            <i data-lucide="scan-line"></i>
+                            <p>Foto Jalan Rusak + Deteksi AI</p>
+                            <span style="font-size:12px;color:#94A3B8;">(unggah foto untuk melihat hasil deteksi)</span>
                         </div>
-                        <h2 data-i18n="dashboard.detectionTitle">Deteksi & Analisis Kerusakan Jalan</h2>
-                        <p data-i18n="dashboard.detectionDesc">Unggah dokumentasi foto jalan raya untuk memproses segmentasi objek kerusakan jalan, lubang, dan retakan secara real-time via YOLOv8.</p>
+                        <!-- Simulasi bounding box overlay (contoh visual deteksi AI) -->
+                        <div class="bbox-overlay b1"></div>
+                        <div class="bbox-label l1">Lubang Jalan 92%</div>
+                        <div class="bbox-overlay b2"></div>
+                        <div class="bbox-label l2">Retak 87%</div>
                     </div>
-                    <a href="upload.php" class="action-btn" data-i18n="dashboard.openDetection">
-                        Buka Modul Deteksi
-                    </a>
-                </div>
-
-                <!-- Bento Right Column -->
-                <div class="bento-right">
-
-                    <!-- Bento 2: Stats Card -->
-                    <div class="bento-card bento-stats">
-                        <div class="stats-header">
-                            <h3 data-i18n="dashboard.modelSpecs">Model Core Specs</h3>
-                            <div class="live-indicator">
-                                <span class="status-dot" style="width:5px;height:5px;"></span>
-                                <span data-i18n="dashboard.live">Live</span>
-                            </div>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label" data-i18n="dashboard.weightsFile">Weights File</span>
-                            <span class="stat-value yellow">best.pt</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label" data-i18n="dashboard.framework">Framework</span>
-                            <span class="stat-value indigo">PyTorch / YOLO</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label" data-i18n="dashboard.inferenceSpeed">Inference Speed</span>
-                            <span class="stat-value green">12ms</span>
-                        </div>
-                        <div class="stat-item">
-                            <span class="stat-label" data-i18n="dashboard.modelStatus">Model Status</span>
-                            <span class="stat-value emerald" style="display:flex;align-items:center;gap:6px;">
-                                <span class="status-dot" style="width:6px;height:6px;"></span>
-                                <span data-i18n="dashboard.online">Online</span>
-                            </span>
-                        </div>
-                        <div class="accuracy-bar-wrap">
-                            <div class="accuracy-bar-label">
-                                <span data-i18n="dashboard.accuracy">YOLOv8 Accuracy</span>
-                                <span style="color:var(--brand-yellow);font-weight:600;">94.2%</span>
-                            </div>
-                            <div class="accuracy-bar">
-                                <div class="accuracy-bar-fill"></div>
-                            </div>
-                        </div>
-                        <div style="margin-top:12px;padding:10px 14px;background:var(--bg-input);border-radius:12px;text-align:center;font-size:12px;color:var(--text-muted);font-family:'SF Mono','JetBrains Mono',monospace;" data-i18n="dashboard.linked">
-                            modules/main.py linked
-                        </div>
-                    </div>
-
-                    <!-- Bento 3: Recent Inspections -->
-                    <div class="bento-card bento-recent">
-                        <div class="recent-header">
-                            <h3 data-i18n="dashboard.recentInspections">Recent Inspections</h3>
-                            <a href="#" data-i18n="dashboard.viewAll">View all →</a>
-                        </div>
-                        <div class="recent-item">
-                            <div class="recent-icon road">
-                                <i data-lucide="route"></i>
-                            </div>
-                            <div class="recent-info">
-                                <div class="recent-title">Jalan Ahmad Yani</div>
-                                <div class="recent-meta">2 hours ago • 3 detections</div>
-                            </div>
-                            <span class="recent-status completed">Completed</span>
-                        </div>
-                        <div class="recent-item">
-                            <div class="recent-icon pothole">
-                                <i data-lucide="triangle-alert"></i>
-                            </div>
-                            <div class="recent-info">
-                                <div class="recent-title">Jl. Diponegoro</div>
-                                <div class="recent-meta">5 hours ago • 7 detections</div>
-                            </div>
-                            <span class="recent-status completed">Completed</span>
-                        </div>
-                        <div class="recent-item">
-                            <div class="recent-icon crack">
-                                <i data-lucide="scan-line"></i>
-                            </div>
-                            <div class="recent-info">
-                                <div class="recent-title">Jl. Sudirman</div>
-                                <div class="recent-meta">1 day ago • 12 detections</div>
-                            </div>
-                            <span class="recent-status processing">Processing</span>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 
-            <!-- Quick Stats Row -->
-            <div class="quick-stats">
-                <div class="quick-stat-card">
-                    <div class="quick-stat-number gradient-text">1,247</div>
-                    <div class="quick-stat-label" data-i18n="dashboard.totalInspections">Total Inspections</div>
-                </div>
-                <div class="quick-stat-card">
-                    <div class="quick-stat-number" style="color:#22C55E;">94.2%</div>
-                    <div class="quick-stat-label" data-i18n="dashboard.detectionAccuracy">Detection Accuracy</div>
-                </div>
-                <div class="quick-stat-card">
-                    <div class="quick-stat-number" style="color:var(--brand-indigo);">12ms</div>
-                    <div class="quick-stat-label" data-i18n="dashboard.avgInference">Avg. Inference</div>
+            <!-- ===== CARA KERJA (3 langkah) ===== -->
+            <div class="how-it-works" id="how-it-works">
+                <h2>Bagaimana Cara Kerjanya?</h2>
+                <p>Tiga langkah mudah untuk melaporkan kerusakan jalan</p>
+                <div class="steps-grid">
+                    <div class="step-card">
+                        <div class="s-icon"><i data-lucide="camera"></i></div>
+                        <div class="s-num">Langkah 1</div>
+                        <h3>Foto Jalan Rusak</h3>
+                        <p>Ambil foto jalan yang rusak menggunakan kamera HP atau upload dari galeri. Pastikan foto jelas dan terkena cahaya.</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="s-icon"><i data-lucide="sparkles"></i></div>
+                        <div class="s-num">Langkah 2</div>
+                        <h3>Deteksi Otomatis oleh AI</h3>
+                        <p>Model YOLOv8 kami akan mendeteksi jenis kerusakan (lubang, retak, bergelombang) dan tingkat keparahannya secara otomatis.</p>
+                    </div>
+                    <div class="step-card">
+                        <div class="s-icon"><i data-lucide="check-circle-2"></i></div>
+                        <div class="s-num">Langkah 3</div>
+                        <h3>Ditindaklanjuti</h3>
+                        <p>Laporan masuk ke dashboard admin untuk diverifikasi dan ditindaklanjuti. Pantau status perbaikan secara real-time.</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- Bottom Mini Bento Cards -->
-            <div class="bento-bottom-row">
-                <div class="bento-card bento-mini">
-                    <div class="mini-icon" style="background:rgba(250, 204, 21, 0.1);color:var(--brand-yellow);">
-                        <i data-lucide="bot"></i>
-                    </div>
-                    <h4 data-i18n="dashboard.aiChat">AI Chat Assistant</h4>
-                    <p data-i18n="dashboard.aiChatDesc">Consult with RoKenAI about road damage analysis results.</p>
+            <!-- ===== STATISTIK ===== -->
+            <div class="stats-section">
+                <div class="stat-card-landing">
+                    <div class="s-num">1.247</div>
+                    <div class="s-label">Total Laporan</div>
                 </div>
-                <div class="bento-card bento-mini">
-                    <div class="mini-icon" style="background:rgba(99, 102, 241, 0.1);color:var(--brand-indigo);">
-                        <i data-lucide="file-text"></i>
-                    </div>
-                    <h4 data-i18n="dashboard.reports">Generate Reports</h4>
-                    <p data-i18n="dashboard.reportsDesc">Export detailed inspection reports in PDF format.</p>
+                <div class="stat-card-landing">
+                    <div class="s-num">892</div>
+                    <div class="s-label">Selesai Diperbaiki</div>
                 </div>
-                <div class="bento-card bento-mini">
-                    <div class="mini-icon" style="background:rgba(34, 197, 94, 0.1);color:#22C55E;">
-                        <i data-lucide="database"></i>
+                <div class="stat-card-landing">
+                    <div class="s-num">4.2</div>
+                    <div class="s-label">Rata-rata Respons (hari)</div>
+                </div>
+            </div>
+
+            <!-- ===== FITUR-FITUR ===== -->
+            <div class="features-section">
+                <h2>Fitur RoKenAI</h2>
+                <div class="features-grid">
+                    <div class="step-card">
+                        <div class="s-icon" style="background:rgba(59,130,246,0.1);color:var(--primary-500);">
+                            <i data-lucide="bot"></i>
+                        </div>
+                        <h3>Tanya AI</h3>
+                        <p>Konsultasi dengan asisten AI tentang jenis kerusakan, prioritas perbaikan, dan rekomendasi penanganan.</p>
+                        <a href="chat.php" class="btn-ghost" style="margin-top:8px;">
+                            Mulai Chat <i data-lucide="arrow-right"></i>
+                        </a>
                     </div>
-                    <h4 data-i18n="dashboard.training">Model Training</h4>
-                    <p data-i18n="dashboard.trainingDesc">Retrain the model with new road damage datasets.</p>
+                    <div class="step-card">
+                        <div class="s-icon" style="background:rgba(59,130,246,0.1);color:var(--primary-500);">
+                            <i data-lucide="map-pin"></i>
+                        </div>
+                        <h3>Lacak Status Perbaikan</h3>
+                        <p>Pantau perkembangan laporan Anda melalui "Garis Jalan" — lihat progres dari Dilaporkan hingga Selesai Diperbaiki.</p>
+                        <a href="profile.php" class="btn-ghost" style="margin-top:8px;">
+                            Lihat Riwayat <i data-lucide="arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="step-card">
+                        <div class="s-icon" style="background:rgba(59,130,246,0.1);color:var(--primary-500);">
+                            <i data-lucide="bell"></i>
+                        </div>
+                        <h3>Notifikasi Real-time</h3>
+                        <p>Dapatkan pemberitahuan setiap kali status laporan berubah — dari diverifikasi hingga selesai diperbaiki.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== LAPORAN TERBARU ===== -->
+            <div class="recent-section">
+                <div class="section-header">
+                    <h3>Laporan Terbaru</h3>
+                    <a href="profile.php">Lihat semua &rarr;</a>
+                </div>
+                <div class="recent-list">
+                    <div class="recent-item">
+                        <div class="r-icon" style="background:rgba(59,130,246,0.1);color:var(--primary-700);">
+                            <i data-lucide="map-pin"></i>
+                        </div>
+                        <div class="r-info">
+                            <div class="r-title">Jl. Ahmad Yani — Lubang Jalan</div>
+                            <div class="r-meta">2 jam lalu &bull; ID: #RK-2026-0421</div>
+                        </div>
+                        <span class="status-badge selesai"><span class="s-dot"></span> Selesai</span>
+                    </div>
+                    <div class="recent-item">
+                        <div class="r-icon" style="background:rgba(245,158,11,0.1);color:var(--status-warning);">
+                            <i data-lucide="map-pin"></i>
+                        </div>
+                        <div class="r-info">
+                            <div class="r-title">Jl. Diponegoro — Retak Jalan</div>
+                            <div class="r-meta">5 jam lalu &bull; ID: #RK-2026-0420</div>
+                        </div>
+                        <span class="status-badge diverifikasi"><span class="s-dot"></span> Diverifikasi</span>
+                    </div>
+                    <div class="recent-item">
+                        <div class="r-icon" style="background:rgba(37,99,235,0.1);color:var(--status-progress);">
+                            <i data-lucide="map-pin"></i>
+                        </div>
+                        <div class="r-info">
+                            <div class="r-title">Jl. Sudirman — Jalan Bergelombang</div>
+                            <div class="r-meta">1 hari lalu &bull; ID: #RK-2026-0419</div>
+                        </div>
+                        <span class="status-badge diperbaiki"><span class="s-dot"></span> Diperbaiki</span>
+                    </div>
                 </div>
             </div>
 
         </main>
     </div>
 
+    <?php include 'partials/footer.php'; ?>
+
     <script>
         lucide.createIcons();
     </script>
-
 </body>
 </html>

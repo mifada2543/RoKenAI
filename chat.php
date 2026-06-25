@@ -1,634 +1,464 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoKen | AI Chat</title>
+    <title>RoKenAI | Tanya AI</title>
     <?php include 'partials/link.php'; ?>
     <style>
-        /* ===== Workspace Layout ===== */
-        .chat-workspace {
-            display: flex;
-            height: calc(100vh - 68px);
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 16px;
-            gap: 16px;
-        }
+        /* ================================================================
+           RoKenAI — Halaman Tanya AI (desain.md 5.4)
+           Chat klasik dengan bubble AI biru muda & bubble user biru tua
+           ================================================================ */
 
-        /* ===== Left Panel: Chat History ===== */
-        .chat-history-panel {
-            width: 300px;
-            min-width: 280px;
-            background: var(--bg-subtle);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid var(--border-subtle);
-            border-radius: 20px;
-            padding: 20px 16px;
+        .chat-layout {
             display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            height: calc(100vh - 80px);
+            gap: 16px;
             animation: fadeInUp 0.4s ease;
         }
 
-        @media (max-width: 768px) {
-            .chat-history-panel {
-                display: none;
-            }
+        /* ===== Sidebar (Left) — Riwayat Percakapan ===== */
+        .chat-sidebar {
+            width: 260px;
+            min-width: 260px;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--line-200);
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            gap: 12px;
+            overflow-y: auto;
         }
 
-        .history-header {
+        .sidebar-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px;
-            padding: 0 4px;
         }
-
-        .history-header h3 {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-secondary);
-            letter-spacing: 0.02em;
+        .sidebar-header h3 {
+            font-size: 12px;
+            font-weight: 700;
+            color: #94A3B8;
             text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-family: var(--font-heading);
         }
 
-        .history-new-btn {
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-subtle);
+        .new-chat-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            color: var(--text-muted);
-            transition: all 0.2s ease;
-        }
-
-        .history-new-btn:hover {
-            background: rgba(250, 204, 21, 0.1);
-            border-color: rgba(250, 204, 21, 0.2);
-            color: var(--brand-yellow);
-        }
-
-        .history-new-btn i {
-            width: 16px;
-            height: 16px;
-        }
-
-        .history-search {
-            padding: 10px 14px;
-            border-radius: 12px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-subtle);
-            color: var(--text-primary);
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: var(--radius-sm);
+            background: var(--primary-100);
+            border: 1px solid rgba(29, 78, 216, 0.15);
+            color: var(--primary-700);
             font-size: 13px;
-            outline: none;
-            width: 100%;
-            margin-bottom: 16px;
+            font-weight: 600;
+            cursor: pointer;
             transition: all 0.2s ease;
+            font-family: var(--font-body);
+            width: 100%;
         }
-
-        .history-search::placeholder {
-            color: var(--text-muted);
+        .new-chat-btn:hover {
+            background: rgba(29, 78, 216, 0.12);
         }
+        .new-chat-btn i { width: 16px; height: 16px; }
 
-        .history-search:focus {
-            border-color: rgba(250, 204, 21, 0.3);
-            background: var(--bg-hover);
-        }
-
-        .history-groups {
+        .chat-history-list {
             flex: 1;
             overflow-y: auto;
-            margin: 0 -4px;
-            padding: 0 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
         }
-
-        .history-group-label {
-            font-size: 10px;
-            font-weight: 600;
-            letter-spacing: 0.08em;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            padding: 8px 12px 6px;
-        }
-
         .history-item {
             display: flex;
             align-items: center;
             gap: 10px;
             padding: 10px 12px;
-            border-radius: 12px;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            transition: all 0.2s ease;
-            margin-bottom: 2px;
+            transition: all 0.15s ease;
         }
-
         .history-item:hover {
-            background: var(--bg-hover);
+            background: var(--surface-muted);
         }
-
         .history-item.active {
-            background: var(--bg-active);
-            border: 1px solid rgba(250, 204, 21, 0.1);
+            background: var(--primary-100);
         }
-
-        .history-item-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .history-item .h-icon {
+            width: 14px; height: 14px;
+            color: #94A3B8;
             flex-shrink: 0;
-            background: rgba(99, 102, 241, 0.1);
-            color: var(--brand-indigo);
         }
-
-        .history-item-icon i {
-            width: 16px;
-            height: 16px;
-        }
-
-        .history-item-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .history-item-title {
+        .history-item .h-info { flex: 1; min-width: 0; }
+        .history-item .h-title {
             font-size: 13px;
             font-weight: 500;
-            color: var(--text-primary);
+            color: var(--ink-900);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
-        .history-item-meta {
+        .history-item .h-meta {
             font-size: 11px;
-            color: var(--text-muted);
+            color: #94A3B8;
         }
 
-        /* ===== Right Panel: Chat Area ===== */
-        .chat-main-panel {
+        /* ===== Main Chat Area ===== */
+        .chat-main {
             flex: 1;
             display: flex;
             flex-direction: column;
-            padding: 0 8px;
             min-width: 0;
-            animation: fadeInUp 0.4s ease;
-            animation-delay: 0.1s;
-            animation-fill-mode: both;
         }
 
         /* ===== Chat Header ===== */
-        .chat-main-header {
+        .chat-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 8px 4px 16px;
-            border-bottom: 1px solid var(--border-muted);
+            justify-content: space-between;
+            padding: 8px 0 12px;
+            border-bottom: 1px solid var(--line-200);
+            flex-shrink: 0;
         }
-
-        .chat-model-badge {
+        .chat-header .chat-model {
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 6px 14px;
-            border-radius: 100px;
-            background: rgba(99, 102, 241, 0.08);
-            border: 1px solid rgba(99, 102, 241, 0.12);
-            font-size: 12px;
-            font-weight: 500;
-            color: var(--brand-indigo);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ink-600);
+        }
+        .chat-header .chat-model i {
+            width: 18px; height: 18px;
+            color: var(--primary-500);
         }
 
-        .chat-model-badge i {
-            width: 14px;
-            height: 14px;
-        }
-
-        .chat-actions {
-            margin-left: auto;
-            display: flex;
-            gap: 8px;
-        }
-
-        .chat-action-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-subtle);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: var(--text-muted);
-            transition: all 0.2s ease;
-        }
-
-        .chat-action-btn:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
-        }
-
-        .chat-action-btn i {
-            width: 18px;
-            height: 18px;
-        }
-
-        /* ===== Chat Messages Area ===== */
-        .chat-messages {
+        /* ===== Messages Area ===== */
+        .chat-msgs {
             flex: 1;
             overflow-y: auto;
-            padding: 20px 4px 12px;
+            padding: 24px 0 12px;
             display: flex;
             flex-direction: column;
             gap: 16px;
         }
 
-        /* ===== Welcome Message ===== */
-        .welcome-message {
+        /* ===== Welcome ===== */
+        .welcome-msg {
             text-align: center;
-            padding: 40px 20px 20px;
+            padding: 40px 20px 24px;
         }
-
-        .welcome-avatar {
-            width: 64px;
-            height: 64px;
+        .welcome-msg .welcome-icon {
+            width: 56px; height: 56px;
             border-radius: 50%;
-            background: linear-gradient(135deg, rgba(250, 204, 21, 0.15), rgba(99, 102, 241, 0.15));
-            border: 2px solid rgba(255, 255, 255, 0.08);
+            background: var(--primary-100);
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 16px;
-            padding: 12px;
+            color: var(--primary-700);
         }
-
-        .welcome-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .welcome-title {
-            font-size: 18px;
+        .welcome-msg .welcome-icon i { width: 28px; height: 28px; }
+        .welcome-msg h2 {
+            font-family: var(--font-heading);
+            font-size: 20px;
             font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 6px;
+            color: var(--ink-900);
+            margin-bottom: 8px;
         }
-
-        .welcome-subtitle {
-            font-size: 13px;
-            color: var(--text-muted);
-            max-width: 400px;
+        .welcome-msg p {
+            font-size: 14px;
+            color: var(--ink-600);
+            max-width: 440px;
             margin: 0 auto 24px;
             line-height: 1.6;
         }
 
-        .suggestion-chips {
+        .welcome-chips {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             justify-content: center;
-            max-width: 480px;
+            max-width: 520px;
             margin: 0 auto;
         }
-
-        .suggestion-chip {
-            padding: 8px 16px;
-            border-radius: 100px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-subtle);
-            font-size: 12px;
-            color: var(--text-secondary);
+        .welcome-chips .chip {
+            padding: 8px 18px;
+            border-radius: var(--radius-full);
+            background: var(--surface);
+            border: 1px solid var(--line-200);
+            font-size: 13px;
+            color: var(--ink-600);
             cursor: pointer;
             transition: all 0.2s ease;
+            font-family: var(--font-body);
+        }
+        .welcome-chips .chip:hover {
+            border-color: var(--primary-500);
+            background: var(--primary-100);
+            color: var(--primary-700);
         }
 
-        .suggestion-chip:hover {
-            background: rgba(250, 204, 21, 0.08);
-            border-color: rgba(250, 204, 21, 0.2);
-            color: var(--brand-yellow);
-        }
-
-        /* ===== Chat Bubbles ===== */
-        .bot-message {
+        /* ===== Chat Bubbles (sesuai desain.md) ===== */
+        .msg-row {
             display: flex;
-            gap: 12px;
-            animation: fadeInUp 0.3s ease;
+            gap: 10px;
             max-width: 85%;
+            animation: fadeInUp 0.3s ease;
         }
+        .msg-row.bot { align-self: flex-start; }
+        .msg-row.user { align-self: flex-end; flex-direction: row-reverse; }
 
-        .bot-avatar {
-            width: 36px;
-            height: 36px;
-            min-width: 36px;
+        /* Avatar AI */
+        .msg-row .msg-avatar {
+            width: 32px; height: 32px; min-width: 32px;
             border-radius: 50%;
-            overflow: hidden;
-            background: linear-gradient(135deg, rgba(250, 204, 21, 0.15), rgba(99, 102, 241, 0.15));
-            border: 2px solid rgba(255, 255, 255, 0.06);
+            background: var(--primary-100);
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 6px;
+            flex-shrink: 0;
+            color: var(--primary-700);
         }
+        .msg-row .msg-avatar i { width: 16px; height: 16px; }
 
-        .bot-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-        }
-
-        .bot-bubble {
-            background: var(--bg-bubble);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--border-subtle);
-            border-radius: 18px 18px 18px 4px;
-            padding: 14px 18px;
+        /* Bubble AI: background biru muda (#DBEAFE), teks gelap */
+        .msg-row.bot .msg-bubble {
+            background: var(--primary-100); /* #DBEAFE */
+            color: var(--ink-900);
+            border-radius: 12px 12px 12px 4px;
+            padding: 12px 16px;
             font-size: 14px;
-            color: var(--text-primary);
             line-height: 1.7;
-            box-shadow: var(--shadow-sm);
+        }
+        /* Bubble User: background biru utama (#1D4ED8), teks putih */
+        .msg-row.user .msg-bubble {
+            background: var(--primary-700); /* #1D4ED8 */
+            color: #fff;
+            border-radius: 12px 12px 4px 12px;
+            padding: 12px 16px;
+            font-size: 14px;
+            line-height: 1.7;
         }
 
-        .user-message {
+        .bubble-actions {
             display: flex;
-            justify-content: flex-end;
-            animation: fadeInUp 0.3s ease;
+            gap: 4px;
+            margin-top: 8px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
         }
-
-        .user-bubble {
-            background: linear-gradient(135deg, rgba(250, 204, 21, 0.12), rgba(99, 102, 241, 0.08));
-            border: 1px solid rgba(250, 204, 21, 0.1);
-            border-radius: 18px 18px 4px 18px;
-            padding: 14px 18px;
-            font-size: 14px;
-            color: var(--text-primary);
-            max-width: min(75%, 480px);
-            line-height: 1.7;
+        .msg-row:hover .bubble-actions { opacity: 1; }
+        .bubble-actions button {
+            width: 28px; height: 28px;
+            border-radius: 6px;
+            border: none;
+            background: rgba(255,255,255,0.5);
+            color: #94A3B8;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
         }
+        .bubble-actions button:hover {
+            background: rgba(29, 78, 216, 0.1);
+            color: var(--primary-700);
+        }
+        .bubble-actions button i { width: 14px; height: 14px; }
 
-        /* ===== Thinking indicator ===== */
-        .thinking-indicator {
+        /* Thinking Animation */
+        .thinking-dots {
             display: flex;
             gap: 4px;
             padding: 4px 0;
         }
-
-        .thinking-dot {
-            width: 6px;
-            height: 6px;
+        .thinking-dots .dot {
+            width: 7px; height: 7px;
             border-radius: 50%;
-            background: var(--text-muted);
+            background: var(--primary-500);
             animation: typing 1.4s infinite ease-in-out;
         }
-
-        .thinking-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        .thinking-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-
+        .thinking-dots .dot:nth-child(2) { animation-delay: 0.2s; }
+        .thinking-dots .dot:nth-child(3) { animation-delay: 0.4s; }
         @keyframes typing {
-            0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+            0%, 80%, 100% { opacity: 0.2; transform: scale(0.8); }
             40% { opacity: 1; transform: scale(1); }
         }
 
-        /* ===== Input Area (Frosted Glass) ===== */
+        /* ===== Input Area ===== */
         .chat-input-area {
-            padding: 12px 0 4px;
-            position: sticky;
-            bottom: 0;
-        }
-
-        .chat-input-container {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            background: var(--bg-elevated);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid var(--border-color);
-            border-radius: 100px;
-            padding: 6px 6px 6px 20px;
-            transition: all 0.25s ease;
-        }
-
-        .chat-input-container:focus-within {
-            border-color: rgba(250, 204, 21, 0.3);
-            box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.06), 0 0 20px rgba(250, 204, 21, 0.05);
-        }
-
-        .chat-input-container .add-btn {
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
+            padding: 12px 0 16px;
             flex-shrink: 0;
-            padding: 6px;
-            border-radius: 50%;
+        }
+        .chat-input-area .input-wrap {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1.5px solid var(--line-200);
+            padding: 4px 4px 4px 16px;
             transition: all 0.2s ease;
         }
-
-        .chat-input-container .add-btn:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: var(--text-secondary);
+        .chat-input-area .input-wrap:focus-within {
+            border-color: var(--primary-500);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
-
-        .chat-input-container .add-btn i {
-            width: 20px;
-            height: 20px;
-        }
-
-        .chat-input {
+        .chat-input-area .input-wrap input {
             flex: 1;
             border: none;
             outline: none;
             font-size: 14px;
-            color: var(--text-primary);
+            color: var(--ink-900);
             background: transparent;
             padding: 10px 0;
-            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-family: var(--font-body);
         }
+        .chat-input-area .input-wrap input::placeholder { color: #94A3B8; }
 
-        .chat-input::placeholder {
-            color: var(--text-muted);
-        }
-
-        .send-btn {
-            width: 44px;
-            height: 44px;
-            min-width: 44px;
-            border-radius: 50%;
+        .chat-input-area .input-wrap .send-btn {
+            width: 42px; height: 42px; min-width: 42px;
+            border-radius: var(--radius-sm);
             border: none;
-            background: linear-gradient(135deg, #FACC15, #EAB308);
+            background: var(--primary-700);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: 0 2px 12px rgba(250, 204, 21, 0.2);
-            color: #0B0F19;
+            transition: all 0.2s ease;
+            color: #fff;
+        }
+        .chat-input-area .input-wrap .send-btn:hover {
+            background: var(--primary-500);
+        }
+        .chat-input-area .input-wrap .send-btn i { width: 18px; height: 18px; }
+
+        .chat-footer-hint {
+            font-size: 11px;
+            color: #94A3B8;
+            text-align: center;
+            padding: 6px 0;
+            border-top: 1px solid var(--line-200);
+            margin-top: 8px;
         }
 
-        .send-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 4px 20px rgba(250, 204, 21, 0.35);
-        }
-
-        .send-btn:active {
-            transform: scale(0.95);
-        }
-
-        .send-btn i {
-            width: 20px;
-            height: 20px;
-        }
-
-        /* ===== Mobile: show history toggle ===== */
-        .mobile-history-toggle {
-            display: none;
-        }
-
+        /* ===== Responsive ===== */
         @media (max-width: 768px) {
-            .mobile-history-toggle {
-                display: flex;
-            }
-            .chat-workspace {
-                padding: 8px;
-            }
+            .chat-sidebar { display: none; }
+            .chat-layout { padding: 0 16px; }
+            .msg-row { max-width: 95%; }
+        }
+        @media (max-width: 480px) {
+            .chat-layout { padding: 0 12px; }
+            .welcome-msg { padding: 24px 12px 16px; }
         }
     </style>
 </head>
-
 <body>
 
     <?php include 'partials/header.php'; ?>
 
     <div id="content-wrapper">
-        <div class="chat-workspace">
+        <div class="chat-layout">
 
-            <!-- Left: Chat History -->
-            <div class="chat-history-panel">
-                <div class="history-header">
-                    <h3 data-i18n="chat.history">Chat History</h3>
-                    <button class="history-new-btn" aria-label="New Chat">
-                        <i data-lucide="plus"></i>
-                    </button>
+            <!-- ===== Sidebar Riwayat ===== -->
+            <aside class="chat-sidebar">
+                <button class="new-chat-btn" onclick="clearChat()">
+                    <i data-lucide="plus"></i>
+                    Percakapan Baru
+                </button>
+
+                <div class="sidebar-header">
+                    <h3>Hari Ini</h3>
                 </div>
-
-                <input class="history-search" type="text" data-i18n="chat.searchPlaceholder" placeholder="Search conversations..." />
-
-                <div class="history-groups">
-                    <div class="history-group-label" data-i18n="chat.today">Today</div>
+                <div class="chat-history-list">
                     <div class="history-item active">
-                        <div class="history-item-icon"><i data-lucide="message-circle"></i></div>
-                        <div class="history-item-content">
-                            <div class="history-item-title">Road damage analysis</div>
-                            <div class="history-item-meta">2 hours ago</div>
+                        <i data-lucide="message-square" class="h-icon"></i>
+                        <div class="h-info">
+                            <div class="h-title">Analisis Jalan Ahmad Yani</div>
+                            <div class="h-meta">2 jam lalu</div>
                         </div>
                     </div>
                     <div class="history-item">
-                        <div class="history-item-icon"><i data-lucide="message-circle"></i></div>
-                        <div class="history-item-content">
-                            <div class="history-item-title">YOLOv8 configuration</div>
-                            <div class="history-item-meta">5 hours ago</div>
-                        </div>
-                    </div>
-
-                    <div class="history-group-label" data-i18n="chat.yesterday">Yesterday</div>
-                    <div class="history-item">
-                        <div class="history-item-icon"><i data-lucide="message-circle"></i></div>
-                        <div class="history-item-content">
-                            <div class="history-item-title">Dataset preprocessing</div>
-                            <div class="history-item-meta">1 day ago</div>
-                        </div>
-                    </div>
-                    <div class="history-item">
-                        <div class="history-item-icon"><i data-lucide="message-circle"></i></div>
-                        <div class="history-item-content">
-                            <div class="history-item-title">Model training results</div>
-                            <div class="history-item-meta">1 day ago</div>
-                        </div>
-                    </div>
-
-                    <div class="history-group-label" data-i18n="chat.lastWeek">Last Week</div>
-                    <div class="history-item">
-                        <div class="history-item-icon"><i data-lucide="message-circle"></i></div>
-                        <div class="history-item-content">
-                            <div class="history-item-title">Export inspection report</div>
-                            <div class="history-item-meta">3 days ago</div>
+                        <i data-lucide="message-square" class="h-icon"></i>
+                        <div class="h-info">
+                            <div class="h-title">Deteksi Lubang Jl. Diponegoro</div>
+                            <div class="h-meta">5 jam lalu</div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Right: Chat Area -->
-            <div class="chat-main-panel">
+                <div class="sidebar-header" style="margin-top:8px;">
+                    <h3>Kemarin</h3>
+                </div>
+                <div class="chat-history-list">
+                    <div class="history-item">
+                        <i data-lucide="message-square" class="h-icon"></i>
+                        <div class="h-info">
+                            <div class="h-title">Cara melaporkan kerusakan</div>
+                            <div class="h-meta">1 hari lalu</div>
+                        </div>
+                    </div>
+                    <div class="history-item">
+                        <i data-lucide="message-square" class="h-icon"></i>
+                        <div class="h-info">
+                            <div class="h-title">Jenis kerusakan yang dideteksi</div>
+                            <div class="h-meta">1 hari lalu</div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- ===== Main Chat ===== -->
+            <div class="chat-main">
+
                 <!-- Chat Header -->
-                <div class="chat-main-header">
-                    <button class="history-new-btn mobile-history-toggle" aria-label="History">
-                        <i data-lucide="panel-left-open"></i>
-                    </button>
-                    <div class="chat-model-badge">
+                <div class="chat-header">
+                    <div class="chat-model">
                         <i data-lucide="sparkles"></i>
-                        <span data-i18n="chat.modelBadge">RoKenAI • YOLOv8</span>
-                    </div>
-                    <div class="chat-actions">
-                        <button class="chat-action-btn" aria-label="Clear">
-                            <i data-lucide="eraser"></i>
-                        </button>
-                        <button class="chat-action-btn" aria-label="More">
-                            <i data-lucide="more-vertical"></i>
-                        </button>
+                        <span>RoKenAI — Asisten Deteksi Jalan</span>
                     </div>
                 </div>
 
-                <!-- Chat Messages -->
-                <div class="chat-messages" id="chatArea">
-                    <!-- Welcome Section -->
-                    <div class="welcome-message">
-                        <div class="welcome-avatar">
-                            <img src="assets/Logo.png" alt="RoKen">
+                <!-- Messages -->
+                <div class="chat-msgs" id="chatArea">
+                    <!-- Welcome Message -->
+                    <div class="welcome-msg" id="welcomeMsg">
+                        <div class="welcome-icon">
+                            <i data-lucide="bot"></i>
                         </div>
-                        <div class="welcome-title" data-i18n="chat.welcomeTitle">Selamat datang di RoKenAI</div>
-                        <div class="welcome-subtitle" data-i18n="chat.welcomeDesc">
-                            Your AI assistant for road infrastructure damage detection and analysis. Ask me anything about road inspection data.
-                        </div>
-                        <div class="suggestion-chips">
-                            <span class="suggestion-chip" onclick="quickSend('How to analyze road damage images?')" data-i18n="chat.suggestionAnalyze">🔍 Analyze road damage</span>
-                            <span class="suggestion-chip" onclick="quickSend('Explain YOLOv8 metrics')" data-i18n="chat.suggestionMetrics">📊 YOLOv8 metrics</span>
-                            <span class="suggestion-chip" onclick="quickSend('Upload format requirements')" data-i18n="chat.suggestionUpload">📁 Upload guide</span>
-                            <span class="suggestion-chip" onclick="quickSend('Show recent detections')" data-i18n="chat.suggestionRecent">📋 Recent results</span>
+                        <h2>Selamat datang di RoKenAI</h2>
+                        <p>Asisten AI untuk deteksi dan analisis kerusakan jalan. Tanya apa pun tentang pelaporan, jenis kerusakan, atau cara menggunakan platform.</p>
+                        <div class="welcome-chips">
+                            <span class="chip" onclick="quickSend('Bagaimana cara melaporkan kerusakan jalan?')">📷 Cara melaporkan</span>
+                            <span class="chip" onclick="quickSend('Cek status laporan saya')">📋 Status laporan saya</span>
+                            <span class="chip" onclick="quickSend('Jenis kerusakan apa yang bisa dideteksi?')">🔍 Jenis kerusakan</span>
+                            <span class="chip" onclick="quickSend('Berapa lama proses perbaikan?')">⏱ Waktu perbaikan</span>
                         </div>
                     </div>
-
-
                 </div>
 
-                <!-- Input Bar -->
+                <!-- Input -->
                 <div class="chat-input-area">
-                    <div class="chat-input-container">
-                        <button class="add-btn" aria-label="Add">
-                            <i data-lucide="paperclip"></i>
-                        </button>
-                        <input class="chat-input" type="text" id="chatInput" data-i18n="chat.inputPlaceholder" placeholder="Tanya RoKenAI..." autocomplete="off">
-                        <button class="send-btn" id="sendBtn" aria-label="Send">
+                    <div class="input-wrap">
+                        <input type="text" id="chatInput" placeholder="Tanya RoKenAI..." autocomplete="off">
+                        <button class="send-btn" id="sendBtn" aria-label="Kirim">
                             <i data-lucide="arrow-up"></i>
                         </button>
                     </div>
+                    <div class="chat-footer-hint">AI dapat melakukan kesalahan. Periksa informasi penting.</div>
                 </div>
+
             </div>
 
         </div>
@@ -637,83 +467,117 @@
     <script>
         lucide.createIcons();
 
+        // ================================================================
+        // LOGIKA CHAT
+        // Penjelasan: Fungsi addMessage untuk menambahkan bubble chat,
+        // baik dari user maupun bot AI. Bubble AI pakai background biru
+        // muda (#DBEAFE), bubble user pakai background biru tua (#1D4ED8).
+        // ================================================================
+
         const chatArea = document.getElementById('chatArea');
         const chatInput = document.getElementById('chatInput');
         const sendBtn = document.getElementById('sendBtn');
+        const welcomeHTML = document.getElementById('welcomeMsg')?.outerHTML || '';
 
+        // Fungsi menambahkan pesan ke area chat
         function addMessage(text, isUser) {
-            const div = document.createElement('div');
+            // Sembunyikan welcome message jika user mengirim pesan
+            const welcome = document.getElementById('welcomeMsg');
+            if (welcome && isUser) welcome.style.display = 'none';
+
+            const row = document.createElement('div');
+            row.className = 'msg-row ' + (isUser ? 'user' : 'bot');
+
             if (isUser) {
-                div.className = 'user-message';
-                div.innerHTML = `<div class="user-bubble">${text}</div>`;
+                // Bubble user: biru tua (#1D4ED8), teks putih
+                row.innerHTML = '<div class="msg-bubble">' + escapeHtml(text) + '</div>';
             } else {
-                div.className = 'bot-message';
-                div.innerHTML = `<div class="bot-avatar"><img src="assets/Logo.png" alt="RoKen"></div><div class="bot-bubble">${text}</div>`;
+                // Bubble AI: biru muda (#DBEAFE), teks gelap, ada avatar robot
+                row.innerHTML = '<div class="msg-avatar"><i data-lucide="bot"></i></div>' +
+                    '<div class="msg-bubble">' + escapeHtml(text) +
+                    '<div class="bubble-actions">' +
+                    '<button onclick="copyText(this)" title="Salin"><i data-lucide="copy"></i></button>' +
+                    '</div></div>';
             }
-            chatArea.appendChild(div);
+            chatArea.appendChild(row);
             chatArea.scrollTop = chatArea.scrollHeight;
+            lucide.createIcons();
         }
 
+        // Escape HTML untuk keamanan (mencegah XSS)
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Fungsi copy teks bubble
+        function copyText(btn) {
+            const bubble = btn.closest('.msg-bubble');
+            const text = bubble.childNodes[0].textContent.trim();
+            navigator.clipboard.writeText(text).then(function() {
+                btn.innerHTML = '<i data-lucide="check" style="width:14px;height:14px;"></i>';
+                setTimeout(function() {
+                    btn.innerHTML = '<i data-lucide="copy" style="width:14px;height:14px;"></i>';
+                    lucide.createIcons();
+                }, 1500);
+            });
+        }
+
+        // Animasi "sedang mengetik"
         function addThinking() {
             const div = document.createElement('div');
-            div.className = 'bot-message';
+            div.className = 'msg-row bot';
             div.id = 'thinkingMsg';
-            div.innerHTML = `
-                <div class="bot-avatar"><img src="assets/Logo.png" alt="RoKen"></div>
-                <div class="bot-bubble">
-                    <div class="thinking-indicator">
-                        <div class="thinking-dot"></div>
-                        <div class="thinking-dot"></div>
-                        <div class="thinking-dot"></div>
-                    </div>
-                </div>`;
+            div.innerHTML = '<div class="msg-avatar"><i data-lucide="bot"></i></div>' +
+                '<div class="msg-bubble"><div class="thinking-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div></div>';
             chatArea.appendChild(div);
             chatArea.scrollTop = chatArea.scrollHeight;
         }
-
         function removeThinking() {
             const el = document.getElementById('thinkingMsg');
             if (el) el.remove();
         }
 
+        // Kirim pesan
         function sendMessage() {
             const text = chatInput.value.trim();
             if (!text) return;
+
             addMessage(text, true);
             chatInput.value = '';
+
+            // Sembunyikan chips
+            const chips = document.querySelector('.welcome-chips');
+            if (chips) chips.style.display = 'none';
+
+            // Tampilkan animasi typing, lalu balas
             addThinking();
-            setTimeout(() => {
+            setTimeout(function() {
                 removeThinking();
-                const reply = 'Terima kasih atas pertanyaannya. Saya sedang memproses analisis untuk: "' + text + '". Hasil akan segera tersedia.';
+                const reply = 'Terima kasih atas pertanyaannya. Saya akan membantu Anda menjawab: "' +
+                    text + '"\n\nUntuk informasi lebih lanjut, silakan cek menu Panduan atau buat laporan baru melalui menu Lapor Kerusakan.';
                 addMessage(reply, false);
-                // Trigger notification
-                if (typeof addNotification === 'function') {
-                    const notifTitle = (typeof i18n !== 'undefined') ? i18n.t('notif.aiResponse') : 'AI Response Ready';
-                    addNotification(
-                        notifTitle,
-                        'RoKenAI has replied to: "' + text.substring(0, 60) + (text.length > 60 ? '..."' : '"'),
-                        'ai',
-                        window.location.href
-                    );
-                }
             }, 1200);
         }
 
+        // Quick reply chip
         function quickSend(text) {
             chatInput.value = text;
             sendMessage();
         }
 
-        // Auto-populate prompt from URL parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const promptParam = urlParams.get('prompt');
-        if (promptParam) {
-            chatInput.value = decodeURIComponent(promptParam.replace(/\+/g, ' '));
-            setTimeout(sendMessage, 500);
+        // Hapus chat / mulai baru
+        function clearChat() {
+            chatArea.innerHTML = welcomeHTML;
+            const chips = document.querySelector('.welcome-chips');
+            if (chips) chips.style.display = 'flex';
+            lucide.createIcons();
         }
 
+        // Event listener
         sendBtn.addEventListener('click', sendMessage);
-        chatInput.addEventListener('keydown', e => {
+        chatInput.addEventListener('keydown', function(e) {
             if (e.key === 'Enter') sendMessage();
         });
     </script>

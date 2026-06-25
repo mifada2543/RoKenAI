@@ -1,469 +1,428 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RoKen | Upload</title>
+    <title>RoKenAI | Lapor Kerusakan</title>
     <?php include 'partials/link.php'; ?>
     <style>
-        /* ===== Upload Page Layout ===== */
+        /* ================================================================
+           RoKenAI — Halaman Upload / Lapor Kerusakan (desain.md 5.3)
+           Form satu kolom, step-by-step, desain ringan dan rapi
+           ================================================================ */
+
         .upload-page {
-            max-width: 980px;
+            max-width: 680px;
             margin: 0 auto;
-            padding: 40px 24px 48px;
+            padding: 24px 24px 48px;
             animation: fadeInUp 0.5s ease;
         }
 
-        /* ===== Page Header ===== */
-        .upload-page-header {
-            text-align: center;
-            margin-bottom: 36px;
+        /* ===== Form Section ===== */
+        .form-section {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--line-200);
+            box-shadow: var(--shadow-card);
+            padding: 28px;
+            margin-bottom: 20px;
         }
-
-        .upload-page-header h1 {
-            font-size: 28px;
+        .form-section .fs-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .form-section .fs-title .fs-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--primary-700);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
             font-weight: 700;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-            letter-spacing: -0.02em;
+            font-family: var(--font-heading);
         }
-
-        .upload-page-header p {
-            font-size: 14px;
-            color: var(--text-secondary);
-            max-width: 480px;
-            margin: 0 auto;
-            line-height: 1.6;
+        .form-section .fs-title h2 {
+            font-family: var(--font-heading);
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ink-900);
+        }
+        .form-section .fs-title i {
+            width: 18px;
+            height: 18px;
+            color: var(--primary-700);
         }
 
         /* ===== Dropzone ===== */
-        .dropzone-wrapper {
-            position: relative;
-        }
-
-        .drop-zone {
+        .dropzone {
             position: relative;
             width: 100%;
-            min-height: 360px;
-            border-radius: 28px;
-            background: var(--bg-light);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 2px dashed rgba(99, 102, 241, 0.25);
+            min-height: 280px;
+            border-radius: var(--radius-md);
+            background: var(--surface-muted);
+            border: 2px dashed var(--line-200);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 48px 32px;
+            padding: 40px 24px;
             cursor: pointer;
             text-align: center;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            overflow: hidden;
-        }
-
-        /* ===== Neon Dash Border Animation (breathing) ===== */
-        .drop-zone::before {
-            content: '';
-            position: absolute;
-            inset: -1px;
-            border-radius: 28px;
-            padding: 2px;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.4), rgba(250, 204, 21, 0.15), rgba(99, 102, 241, 0.4));
-            background-size: 200% 200%;
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            animation: borderBreathe 3s ease-in-out infinite;
-            pointer-events: none;
-        }
-
-        @keyframes borderBreathe {
-            0%, 100% { opacity: 0.4; background-position: 0% 50%; }
-            50% { opacity: 0.9; background-position: 100% 50%; }
-        }
-
-        /* ===== Dropzone Hover / Dragover ===== */
-        .drop-zone:hover {
-            border-color: rgba(250, 204, 21, 0.3);
-            background: var(--bg-subtle);
-        }
-
-        .drop-zone.dragover {
-            border-color: rgba(250, 204, 21, 0.5);
-            background: rgba(250, 204, 21, 0.06);
-            transform: scale(1.015);
-            box-shadow: 0 0 60px rgba(250, 204, 21, 0.08);
-        }
-
-        .drop-zone.dragover::before {
-            opacity: 1;
-            animation-duration: 1.5s;
-        }
-
-        /* ===== Page Dim ===== */
-        body.dimmed .upload-page > *:not(.dropzone-wrapper) {
-            opacity: 0.3;
-            transition: opacity 0.3s ease;
-        }
-
-        body.dimmed .drop-zone {
-            transform: scale(1.02);
-            border-color: rgba(250, 204, 21, 0.6);
-            background: rgba(250, 204, 21, 0.08);
-        }
-
-        /* ===== Dropzone Icon ===== */
-        .drop-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 24px;
-            background: rgba(99, 102, 241, 0.08);
-            border: 1px solid rgba(99, 102, 241, 0.15);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 24px;
-            color: var(--brand-indigo);
             transition: all 0.3s ease;
         }
-
-        .drop-zone.dragover .drop-icon {
-            background: rgba(250, 204, 21, 0.12);
-            border-color: rgba(250, 204, 21, 0.25);
-            color: var(--brand-yellow);
-            transform: translateY(-4px);
+        .dropzone:hover {
+            border-color: var(--primary-500);
+            background: rgba(59, 130, 246, 0.03);
         }
-
-        .drop-icon i {
-            width: 36px;
-            height: 36px;
-            stroke-width: 1.5;
+        .dropzone.dragover {
+            border-color: var(--primary-500);
+            background: rgba(59, 130, 246, 0.06);
+            transform: scale(1.01);
         }
-
-        .drop-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 8px;
-        }
-
-        .drop-subtitle {
-            font-size: 14px;
-            color: var(--text-muted);
-            margin-bottom: 20px;
-            line-height: 1.6;
-        }
-
-        .drop-browse {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 24px;
-            border-radius: 14px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-color);
-            color: var(--text-secondary);
-            font-size: 13px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.25s ease;
-        }
-
-        .drop-browse:hover {
-            background: rgba(250, 204, 21, 0.08);
-            border-color: rgba(250, 204, 21, 0.2);
-            color: var(--brand-yellow);
-        }
-
-        .drop-browse i {
-            width: 16px;
-            height: 16px;
-        }
-
-        .drop-hint {
-            margin-top: 16px;
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        #fileInput {
-            display: none;
-        }
-
-        /* ===== Supported Formats Bar ===== */
-        .formats-bar {
+        .dropzone .dz-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-lg);
+            background: var(--primary-100);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 12px;
-            margin-top: 20px;
-            flex-wrap: wrap;
+            margin-bottom: 16px;
+            color: var(--primary-700);
         }
-
-        .format-tag {
-            padding: 4px 12px;
-            border-radius: 8px;
-            background: var(--bg-input);
-            border: 1px solid var(--border-muted);
-            font-size: 11px;
-            font-weight: 500;
-            color: var(--text-muted);
-            font-family: 'SF Mono', 'JetBrains Mono', monospace;
+        .dropzone .dz-icon i { width: 24px; height: 24px; }
+        .dropzone .dz-title {
+            font-family: var(--font-heading);
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--ink-900);
+            margin-bottom: 6px;
         }
-
-        /* ===== Preview Section ===== */
-        #previewWrap {
-            animation: fadeInUp 0.4s ease;
-        }
-
-        .preview-card {
-            background: var(--bg-subtle);
-            backdrop-filter: blur(16px);
-            border: 1px solid var(--border-subtle);
-            border-radius: 24px;
-            padding: 20px;
-            margin-top: 24px;
-        }
-
-        .preview-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .dropzone .dz-sub {
+            font-size: 13px;
+            color: #94A3B8;
             margin-bottom: 16px;
         }
+        #fileInput { display: none; }
 
-        .preview-header h3 {
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        .preview-header .file-size {
-            font-size: 12px;
-            color: var(--text-muted);
-            font-family: 'SF Mono', 'JetBrains Mono', monospace;
-        }
-
-        .preview-img-wrap {
-            border-radius: 16px;
-            overflow: hidden;
-            background: rgba(0, 0, 0, 0.3);
-            max-height: 420px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .preview-img {
-            width: 100%;
-            height: auto;
-            max-height: 400px;
-            object-fit: contain;
-        }
-
-        .preview-actions {
-            display: flex;
-            gap: 12px;
+        /* ===== Preview & Hasil Deteksi AI ===== */
+        #previewWrap {
+            animation: fadeInUp 0.4s ease;
             margin-top: 16px;
         }
-
-        .preview-actions button {
-            flex: 1;
-            padding: 14px 20px;
-            border-radius: 14px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.25s ease;
+        .preview-card {
+            background: var(--surface);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--line-200);
+            overflow: hidden;
+        }
+        .preview-card .prev-img-wrap {
+            position: relative;
+            background: #F1F5F9;
+            max-height: 400px;
             display: flex;
             align-items: center;
             justify-content: center;
+        }
+        .preview-card .prev-img {
+            width: 100%;
+            height: auto;
+            max-height: 380px;
+            object-fit: contain;
+        }
+        /* Overlay hasil deteksi AI (kotak kuning di atas foto) */
+        .detection-overlay {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            flex-wrap: wrap;
             gap: 8px;
-            border: none;
+        }
+        .detection-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--marka-400);
+            color: #0F172A;
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .detection-tag i { width: 14px; height: 14px; }
+
+        .preview-card .prev-actions {
+            display: flex;
+            gap: 10px;
+            padding: 16px;
+            border-top: 1px solid var(--line-200);
+        }
+        .preview-card .prev-actions button {
+            flex: 1;
         }
 
-        .btn-clear {
-            background: var(--bg-input);
-            border: 1px solid var(--border-color) !important;
-            color: var(--text-secondary);
+        /* ===== Form Fields ===== */
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group:last-child { margin-bottom: 0; }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--ink-900);
+            margin-bottom: 6px;
+        }
+        .form-label .label-desc {
+            font-weight: 400;
+            color: #94A3B8;
+            font-size: 12px;
         }
 
-        .btn-clear:hover {
-            background: rgba(239, 68, 68, 0.08);
-            border-color: rgba(239, 68, 68, 0.2) !important;
-            color: #EF4444;
+        /* Input dengan ikon */
+        .input-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-wrap .input-icon {
+            position: absolute;
+            left: 12px;
+            color: #94A3B8;
+            pointer-events: none;
+            display: flex;
+        }
+        .input-wrap .input-icon i { width: 16px; height: 16px; }
+
+        .input-field.with-icon {
+            padding: 10px 14px 10px 38px;
+        }
+        .input-field.textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: var(--font-body);
         }
 
-        .btn-analyze {
-            background: linear-gradient(135deg, #FACC15, #EAB308);
-            color: #0B0F19;
-            box-shadow: 0 0 25px rgba(250, 204, 21, 0.12);
+        /* Lock icon untuk auto-fill GPS */
+        .gps-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: var(--primary-100);
+            border-radius: var(--radius-sm);
+            font-size: 12px;
+            color: var(--primary-700);
+            margin-top: 6px;
+        }
+        .gps-info i { width: 14px; height: 14px; }
+        .gps-info .mono {
+            font-family: var(--font-mono);
+            font-size: 12px;
         }
 
-        .btn-analyze:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 35px rgba(250, 204, 21, 0.25);
-        }
-
-        .btn-analyze:active {
-            transform: translateY(0);
-        }
-
-        .btn-analyze i, .btn-clear i {
-            width: 18px;
-            height: 18px;
+        @media (max-width: 480px) {
+            .upload-page { padding: 16px; }
+            .form-section { padding: 20px; }
+            .dropzone { min-height: 220px; padding: 28px 16px; }
+            .preview-card .prev-actions { flex-direction: column; }
         }
     </style>
 </head>
-
 <body>
 
     <?php include 'partials/header.php'; ?>
 
     <div id="content-wrapper">
-        <div class="upload-page">
+        <div class="upload-page page-enter">
 
-            <!-- Header -->
-            <div class="upload-page-header">
-                <h1 data-i18n="upload.title">Upload Gambar Jalan</h1>
-                <p data-i18n="upload.desc">Unggah foto dokumentasi jalan raya untuk analisis kerusakan menggunakan model AI YOLOv8.</p>
+            <div class="page-heading">
+                <h1>Lapor Kerusakan Jalan</h1>
+                <p>Laporkan kerusakan jalan yang Anda temukan. AI kami akan mendeteksi jenis dan tingkat keparahan secara otomatis.</p>
             </div>
 
-            <!-- Dropzone -->
-            <div class="dropzone-wrapper">
-                <div class="drop-zone" id="dropZone">
-                    <div class="drop-icon">
-                        <i data-lucide="cloud-upload"></i>
+            <!-- ===== STEP 1: Upload Foto ===== -->
+            <div class="form-section">
+                <div class="fs-title">
+                    <span class="fs-num">1</span>
+                    <h2>Upload Foto Jalan Rusak</h2>
+                </div>
+
+                <!-- Dropzone -->
+                <div class="dropzone" id="dropZone">
+                    <div class="dz-icon">
+                        <i data-lucide="camera"></i>
                     </div>
-                    <div class="drop-title" data-i18n="upload.dropTitle">Drag & drop your image here</div>
-                    <div class="drop-subtitle" data-i18n="upload.dropSubtitle">Supported formats: JPG, PNG, WEBP • Max 10MB</div>
-                    <button class="drop-browse" id="browseBtn">
+                    <div class="dz-title">Tarik foto jalan rusak di sini</div>
+                    <div class="dz-sub">Format: JPG, PNG &bull; Maks 10MB</div>
+                    <button type="button" class="btn-secondary" id="browseBtn" style="pointer-events:auto;padding:8px 20px;font-size:13px;">
                         <i data-lucide="folder-open"></i>
-                        <span data-i18n="upload.browse">Browse Files</span>
+                        <span>Pilih Foto</span>
                     </button>
-                    <div class="drop-hint" data-i18n="upload.orClick">or click anywhere in this area</div>
                 </div>
                 <input type="file" id="fileInput" accept="image/*">
 
-                <!-- Formats bar -->
-                <div class="formats-bar">
-                    <span class="format-tag">JPG</span>
-                    <span class="format-tag">PNG</span>
-                    <span class="format-tag">WEBP</span>
-                    <span style="color:var(--text-muted);font-size:11px;">•</span>
-                    <span class="format-tag">Max 10MB</span>
+                <!-- Preview + Hasil Deteksi AI -->
+                <div id="previewWrap" style="display:none;">
+                    <div class="preview-card">
+                        <div class="prev-img-wrap">
+                            <img class="prev-img" id="previewImg" src="" alt="Preview">
+                            <!-- Overlay hasil deteksi AI -->
+                            <div class="detection-overlay">
+                                <span class="detection-tag"><i data-lucide="scan"></i> Lubang Jalan — 92%</span>
+                                <span class="detection-tag"><i data-lucide="alert-triangle"></i> Tingkat: Parah</span>
+                            </div>
+                        </div>
+                        <div class="prev-actions">
+                            <button class="btn-ghost" id="clearBtn" style="border:1.5px solid var(--line-200);padding:8px 16px;">
+                                <i data-lucide="trash-2"></i> Hapus
+                            </button>
+                            <button class="btn-primary" id="analyzeBtn" style="padding:8px 16px;">
+                                <i data-lucide="sparkles"></i> Deteksi Ulang
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- Preview -->
-            <div id="previewWrap" style="display:none;">
-                <div class="preview-card">
-                    <div class="preview-header">
-                        <h3 data-i18n="upload.previewTitle">Image Preview</h3>
-                        <span class="file-size" id="fileSize">0 KB</span>
+            <!-- ===== STEP 2: Konfirmasi Lokasi ===== -->
+            <div class="form-section">
+                <div class="fs-title">
+                    <span class="fs-num">2</span>
+                    <h2>Konfirmasi Lokasi</h2>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Lokasi <span class="label-desc">(otomatis dari GPS)</span></label>
+                    <div class="input-wrap">
+                        <span class="input-icon"><i data-lucide="map-pin"></i></span>
+                        <input class="input-field with-icon" type="text" id="locationField" placeholder="Deteksi lokasi otomatis..." value="-7.250445, 112.768845" readonly>
                     </div>
-                    <div class="preview-img-wrap">
-                        <img class="preview-img" id="previewImg" src="" alt="Preview">
-                    </div>
-                    <div class="preview-actions">
-                        <button class="btn-clear" id="clearBtn">
-                            <i data-lucide="trash-2"></i> <span data-i18n="upload.delete">Hapus</span>
-                        </button>
-                        <button class="btn-analyze" id="uploadBtn">
-                            <i data-lucide="sparkles"></i> <span data-i18n="upload.analyze">Analisa Gambar</span>
-                        </button>
+                    <div class="gps-info">
+                        <i data-lucide="lock"></i>
+                        <span>Lokasi terdeteksi otomatis: </span>
+                        <span class="mono">-7.250445, 112.768845</span>
+                        <span> &bull; </span>
+                        <span>Jl. Raya No. 123, Surabaya</span>
                     </div>
                 </div>
+
+                <div class="form-group">
+                    <label class="form-label">Alamat <span class="label-desc">(opsional, bisa diedit)</span></label>
+                    <div class="input-wrap">
+                        <span class="input-icon"><i data-lucide="home"></i></span>
+                        <input class="input-field with-icon" type="text" id="alamatField" placeholder="Masukkan alamat lokasi" value="Jl. Raya Ahmad Yani No. 123, Surabaya">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== STEP 3: Catatan Tambahan ===== -->
+            <div class="form-section">
+                <div class="fs-title">
+                    <span class="fs-num">3</span>
+                    <h2>Catatan Tambahan</h2>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Deskripsi <span class="label-desc">(opsional)</span></label>
+                    <textarea class="input-field textarea" id="catatanField" placeholder="Contoh: Jalan ini sudah rusak sejak 2 minggu lalu, sering dilewati truk besar...">Lubang cukup dalam, diameter sekitar 30cm. Berbahaya bagi pengendara motor terutama saat malam hari.</textarea>
+                </div>
+            </div>
+
+            <!-- ===== TOMBOL SUBMIT ===== -->
+            <div style="display:flex;gap:12px;">
+                <button class="btn-secondary" style="flex:1;padding:14px;" onclick="history.back()">
+                    <i data-lucide="arrow-left"></i> Kembali
+                </button>
+                <button class="btn-primary" style="flex:2;padding:14px;" id="submitBtn">
+                    <i data-lucide="send"></i> Kirim Laporan
+                </button>
             </div>
 
         </div>
     </div>
 
+    <?php include 'partials/footer.php'; ?>
+
     <script>
         lucide.createIcons();
+
+        // ================================================================
+        // LOGIKA DROPZONE UPLOAD
+        // Penjelasan: Dropzone ini menerima drag & drop atau klik untuk
+        // memilih file gambar. Setelah dipilih, ditampilkan preview foto
+        // dan simulasi hasil deteksi AI (bounding box + confidence).
+        // ================================================================
+
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
         const browseBtn = document.getElementById('browseBtn');
         const previewWrap = document.getElementById('previewWrap');
         const previewImg = document.getElementById('previewImg');
-        const fileSize = document.getElementById('fileSize');
         const clearBtn = document.getElementById('clearBtn');
-        const body = document.body;
 
-        browseBtn.addEventListener('click', e => {
+        // Klik browse button → buka file picker
+        browseBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             fileInput.click();
         });
 
-        dropZone.addEventListener('click', () => fileInput.click());
+        // Klik area dropzone → buka file picker
+        dropZone.addEventListener('click', function() {
+            fileInput.click();
+        });
 
-        fileInput.addEventListener('change', e => {
+        // Saat file dipilih dari dialog
+        fileInput.addEventListener('change', function(e) {
             if (e.target.files[0]) showPreview(e.target.files[0]);
         });
 
-        // ===== Ultra-Responsive Drag Interactions =====
-        dropZone.addEventListener('dragenter', e => {
+        // Drag events
+        dropZone.addEventListener('dragenter', function(e) {
             e.preventDefault();
-            e.stopPropagation();
             dropZone.classList.add('dragover');
-            body.classList.add('dimmed');
         });
-
-        dropZone.addEventListener('dragover', e => {
+        dropZone.addEventListener('dragover', function(e) {
             e.preventDefault();
-            e.stopPropagation();
             dropZone.classList.add('dragover');
-            body.classList.add('dimmed');
         });
-
-        dropZone.addEventListener('dragleave', e => {
-            e.preventDefault();
-            e.stopPropagation();
-            dropZone.classList.remove('dragover');
-            body.classList.remove('dimmed');
-        });
-
-        // Also listen on document to catch dragleave outside
-        document.addEventListener('dragenter', e => {
-            // Only dim when dragging over the main area
-        });
-
-        document.addEventListener('dragover', e => {
-            e.preventDefault();
-        });
-
-        document.addEventListener('drop', e => {
+        dropZone.addEventListener('dragleave', function(e) {
             e.preventDefault();
             dropZone.classList.remove('dragover');
-            body.classList.remove('dimmed');
+        });
+
+        // Drop event — menerima file yang di-drag
+        document.addEventListener('drop', function(e) {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
             if (e.dataTransfer.files[0]) {
-                const file = e.dataTransfer.files[0];
-                if (file.type.startsWith('image/')) {
-                    showPreview(file);
-                }
+                var file = e.dataTransfer.files[0];
+                if (file.type.startsWith('image/')) showPreview(file);
             }
         });
-
-        document.addEventListener('dragend', () => {
+        document.addEventListener('dragend', function() {
             dropZone.classList.remove('dragover');
-            body.classList.remove('dimmed');
         });
 
-        // Prevent browser from opening dropped files
-        window.addEventListener('dragover', e => e.preventDefault());
-        window.addEventListener('drop', e => e.preventDefault());
-
+        // Fungsi menampilkan preview gambar
         function showPreview(file) {
+            // Cek ukuran file (maks 10MB)
             if (file.size > 10 * 1024 * 1024) {
-                alert('File too large. Maximum size is 10MB.');
+                alert('File terlalu besar. Maksimum 10MB.');
                 return;
             }
-            const sizeKB = (file.size / 1024).toFixed(1);
-            fileSize.textContent = sizeKB + ' KB';
-
-            const reader = new FileReader();
-            reader.onload = e => {
+            // Baca file sebagai data URL untuk ditampilkan
+            var reader = new FileReader();
+            reader.onload = function(e) {
                 previewImg.src = e.target.result;
                 previewWrap.style.display = 'block';
                 previewWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -471,10 +430,40 @@
             reader.readAsDataURL(file);
         }
 
-        clearBtn.addEventListener('click', () => {
+        // Tombol hapus preview
+        clearBtn.addEventListener('click', function() {
             previewWrap.style.display = 'none';
             previewImg.src = '';
             fileInput.value = '';
+        });
+
+        // ================================================================
+        // SIMULASI SUBMIT LAPORAN
+        // Penjelasan: Saat tombol Kirim Laporan diklik, tampilkan alert
+        // sukses dengan ID laporan (format mono font) dan progress status
+        // "Garis Jalan" di posisi "Dilaporkan".
+        // ================================================================
+        document.getElementById('submitBtn').addEventListener('click', function() {
+            // Validasi sederhana: cek apakah ada foto yang diupload
+            if (!previewImg.src || previewWrap.style.display === 'none') {
+                alert('Silakan upload foto jalan rusak terlebih dahulu.');
+                return;
+            }
+
+            // Generate ID laporan acak
+            var reportId = 'RK-' + new Date().getFullYear() + '-' +
+                String(Math.floor(Math.random() * 9999)).padStart(4, '0');
+
+            // Tampilkan alert sukses
+            alert(
+                'Laporan berhasil dikirim!\n\n' +
+                'ID Laporan: ' + reportId + '\n' +
+                'Status: Dilaporkan\n\n' +
+                'Pantau progres perbaikan melalui menu Riwayat Laporan.'
+            );
+
+            // Redirect ke halaman profil/riwayat
+            window.location.href = 'profile.php';
         });
     </script>
 </body>
