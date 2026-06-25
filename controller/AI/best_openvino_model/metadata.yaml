@@ -1,0 +1,29 @@
+description: Ultralytics best model trained on /content/kerusakan-jalan-1/data.yaml
+author: Ultralytics
+date: '2026-06-24T15:46:11.603574'
+version: 8.4.72
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+batch: 1
+imgsz:
+- 512
+- 512
+names:
+  0: lubang
+  1: pengelupasan_lapisan_permukaan
+  2: retak_blok
+  3: retak_kulit_buaya
+  4: retak_memanjang
+  5: retak_pinggir
+args:
+  data: null
+  batch: 1
+  fraction: 1.0
+  half: true
+  int8: false
+  dynamic: false
+  nms: false
+channels: 3
+end2end: false
