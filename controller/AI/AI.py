@@ -3,10 +3,10 @@ import sys
 from ultralytics import YOLO
 
 # --- KONFIGURASI ---
-MODEL_ASLI = 'best.pt'
+MODEL_ASLI = 'train4/best.pt'
 FOLDER_OPENVINO = 'best_openvino_model'
 FOLDER_HASIL = '/opt/lampp/htdocs/RoKenAI/controller/uploads/output'
-CONFIDENCE_THRESHOLD = 0.1 
+CONFIDENCE_THRESHOLD = 0.15 
 # -------------------
 
 def main():
