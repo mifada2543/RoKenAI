@@ -1,3 +1,4 @@
+<?php session_name('RoKenAI'); session_start(); ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -281,7 +282,7 @@
                     <!-- Welcome — menggunakan Chat.png sebagai ilustrasi -->
                     <div class="welcome-msg" id="welcomeMsg">
                         <div class="welcome-img-wrap">
-                            <img src="assets/img/Chat.png" alt="RoKenAI Chat">
+                            <img src="assets/Logo.png" alt="RoKenAI Chat">
                         </div>
                         <h2 data-i18n="chat.welcomeTitle">Selamat datang di RoKenAI</h2>
                         <p data-i18n="chat.welcomeDesc">Asisten AI untuk deteksi dan analisis kerusakan jalan. Tanya apa pun tentang pelaporan, jenis kerusakan, atau cara menggunakan platform.</p>
@@ -323,13 +324,145 @@
         const uploadBtn   = document.getElementById('uploadBtn');
         const welcomeHTML = document.getElementById('welcomeMsg')?.outerHTML || '';
 
+        // ===== Riwayat percakapan (untuk konteks deteksi gambar) =====
+        const conversationHistory = [];
+        const MAX_HISTORY = 20;
+
+        // ===== Template Jawaban Cepat =====
+        const TEMPLATES = [
+            {
+                keywords: ['cara melapor', 'bagaimana cara', 'lapor kerusakan', 'upload foto', 'cara lapor', 'langkah', 'step', 'report damage', 'how to'],
+                response: '📋 <b>Cara Melaporkan Kerusakan Jalan</b><br><br>'
+                    + 'Langkah-langkahnya sangat mudah:<br><br>'
+                    + '1️⃣ <b>Ambil Foto</b> — Foto jalan rusak dengan HP. Pastikan pencahayaan cukup.<br>'
+                    + '2️⃣ <b>Upload</b> — Buka halaman <b>Lapor Kerusakan</b>, upload foto, konfirmasi lokasi.<br>'
+                    + '3️⃣ <b>AI Deteksi</b> — YOLOv8 otomatis mendeteksi jenis & tingkat keparahan.<br>'
+                    + '4️⃣ <b>Kirim Laporan</b> — Tambahkan catatan jika perlu, lalu kirim.<br>'
+                    + '5️⃣ <b>Pantau</b> — Cek status perbaikan di halaman <b>Riwayat</b>.<br><br>'
+                    + '👉 Coba langsung di menu <a href="upload.php" style="color:#1D4ED8;font-weight:600;">Lapor Kerusakan</a>!'
+            },
+            {
+                keywords: ['status', 'laporan saya', 'cek laporan', 'progress', 'riwayat', 'perbaikan', 'track', 'my report', 'history'],
+                response: '📊 <b>Cek Status Laporan</b><br><br>'
+                    + 'Untuk melihat status laporan kamu:<br><br>'
+                    + '🔹 Login ke akun RoKenAI<br>'
+                    + '🔹 Klik menu <b>Riwayat</b> di navbar<br>'
+                    + '🔹 Di sana kamu bisa lihat semua laporan dan statusnya:<br><br>'
+                    + '🟡 <b>Dilaporkan</b> — Laporan baru masuk<br>'
+                    + '🔵 <b>Diverifikasi</b> — Sedang diperiksa admin<br>'
+                    + '🟠 <b>Diperbaiki</b> — Sedang dalam perbaikan<br>'
+                    + '🟢 <b>Selesai</b> — Sudah diperbaiki<br><br>'
+                    + 'Setiap perubahan status akan mendapat notifikasi.'
+            },
+            {
+                keywords: ['jenis kerusakan', 'tipe kerusakan', 'pothole', 'lubang', 'crack', 'retak', 'rutting', 'bergelombang', 'damage type', 'jenis', 'macam', 'tipe'],
+                response: '🔍 <b>Jenis Kerusakan Jalan</b><br><br>'
+                    + 'RoKenAI bisa mendeteksi beberapa jenis kerusakan:<br><br>'
+                    + '🕳️ <b>Pothole (Lubang)</b> — Lubang pada permukaan jalan, berbagai ukuran.<br>'
+                    + '〰️ <b>Crack (Retak)</b> — Retak memanjang/melebar di permukaan aspal.<br>'
+                    + '〰️ <b>Rutting (Bergelombang)</b> — Jalan bergelombang akibat beban berlebih.<br><br>'
+                    + 'Setiap deteksi juga memberikan <b>tingkat keparahan</b>:<br>'
+                    + '🟢 Ringan — 🔵 Sedang — 🔴 Parah<br><br>'
+                    + 'Akurasi deteksi mencapai <b>>85%</b> untuk kondisi pencahayaan yang baik!'
+            },
+            {
+                keywords: ['waktu', 'berapa lama', 'timeline', 'estimasi', 'selesai', 'proses', 'durasi', 'how long', 'when'],
+                response: '⏱ <b>Waktu Perbaikan</b><br><br>'
+                    + 'Estimasi waktu penanganan laporan:<br><br>'
+                    + '📥 <b>Pelaporan</b> — 1-2 jam (verifikasi awal)<br>'
+                    + '🔍 <b>Verifikasi</b> — 1-2 hari (admin memeriksa)<br>'
+                    + '🛠️ <b>Perbaikan</b> — 3-7 hari (tergantung tingkat kerusakan)<br>'
+                    + '✅ <b>Selesai</b> — Konfirmasi perbaikan<br><br>'
+                    + '⏳ Total estimasi: <b>5-10 hari kerja</b><br><br>'
+                    + '<i>*Waktu bisa berbeda tergantung lokasi dan tingkat keparahan.</i>'
+            },
+            {
+                keywords: ['rokenai', 'tentang', 'apa itu', 'fitur', 'platform', 'about', 'what is', 'kenapa', 'keunggulan'],
+                response: '🤖 <b>Tentang RoKenAI</b><br><br>'
+                    + 'RoKenAI adalah platform deteksi kerusakan jalan berbasis <b>AI Computer Vision</b> menggunakan <b>YOLOv8</b>.<br><br>'
+                    + '<b>Fitur Utama:</b><br>'
+                    + '📸 <b>Deteksi Otomatis</b> — Upload foto, AI langsung deteksi jenis & tingkat kerusakan<br>'
+                    + '💬 <b>Tanya AI</b> — Konsultasi dengan asisten AI tentang kerusakan jalan<br>'
+                    + '📊 <b>Tracking</b> — Pantau status perbaikan secara real-time<br>'
+                    + '🌐 <b>Multi Bahasa</b> — Support Indonesia & English<br><br>'
+                    + 'Teknologi: YOLOv8, Python, OpenVINO, PHP, MySQL'
+            },
+            {
+                keywords: ['akurasi', 'keakuratan', 'seberapa akurat', 'presisi', 'accuracy', 'akurat', 'percaya', 'kepercayaan'],
+                response: '📈 <b>Akurasi Deteksi</b><br><br>'
+                    + 'Model RoKenAI mencapai:<br><br>'
+                    + '🎯 <b>Akurasi rata-rata: >85%</b><br>'
+                    + '⚡ <b>Kecepatan inferensi: <500ms per gambar</b><br>'
+                    + '📊 <b>Dilatih dengan ribuan sampel data</b><br><br>'
+                    + 'Faktor yang mempengaruhi akurasi:<br>'
+                    + '✅ Pencahayaan yang baik<br>'
+                    + '✅ Foto jelas dan tidak blur<br>'
+                    + '✅ Sudut pengambilan yang tepat<br><br>'
+                    + 'Untuk hasil terbaik, pastikan foto diambil dengan pencahayaan cukup dan jarak yang ideal!'
+            },
+            {
+                keywords: ['halo', 'hai', 'siang', 'pagi', 'malam', 'helo', 'hello', 'hi', 'selamat', 'hey', 'p', 'test', 'tes'],
+                response: 'Halo! 👋 Selamat datang di <b>RoKenAI</b> — asisten deteksi kerusakan jalan.<br><br>'
+                    + 'Ada yang bisa saya bantu? Berikut yang bisa Anda tanyakan:<br>'
+                    + '📷 Cara melaporkan kerusakan<br>'
+                    + '🔍 Jenis kerusakan yang dideteksi<br>'
+                    + '📊 Status laporan<br>'
+                    + '⏱ Waktu perbaikan<br><br>'
+                    + 'Atau langsung upload foto jalan rusak untuk deteksi otomatis!'
+            }
+        ];
+
+        const FALLBACK_RESPONSE = 'Maaf, saya belum bisa menjawab pertanyaan tersebut. 😊<br><br>'
+            + 'Berikut yang bisa saya bantu:<br>'
+            + '📷 <b>Cara melaporkan</b> — Langkah-langkah melapor kerusakan<br>'
+            + '🔍 <b>Jenis kerusakan</b> — Pothole, crack, rutting<br>'
+            + '📊 <b>Status laporan</b> — Cara cek progress<br>'
+            + '⏱ <b>Waktu perbaikan</b> — Estimasi durasi<br><br>'
+            + 'Atau coba upload foto jalan rusak untuk deteksi otomatis oleh AI!';
+
+        /**
+         * Cocokkan teks user dengan template berdasarkan kata kunci
+         */
+        function matchTemplate(text) {
+            var lower = text.toLowerCase().trim();
+            var bestMatch = null;
+            var bestScore = 0;
+
+            for (var i = 0; i < TEMPLATES.length; i++) {
+                var tpl = TEMPLATES[i];
+                var score = 0;
+                for (var j = 0; j < tpl.keywords.length; j++) {
+                    if (lower.indexOf(tpl.keywords[j]) !== -1) {
+                        // Keyword lebih panjang = lebih spesifik = skor lebih tinggi
+                        score += tpl.keywords[j].length;
+                    }
+                }
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestMatch = tpl;
+                }
+            }
+
+            return bestMatch ? bestMatch.response : FALLBACK_RESPONSE;
+        }
+
         function escapeHtml(text) {
             const d = document.createElement('div');
             d.textContent = text;
             return d.innerHTML;
         }
 
-        function addMessage(html, isUser) {
+        /**
+         * Tambah pesan ke riwayat (hanya untuk teks, bukan HTML)
+         */
+        function addToHistory(role, text) {
+            conversationHistory.push({ role: role, content: text });
+            if (conversationHistory.length > MAX_HISTORY) {
+                conversationHistory.splice(0, 2); // hapus 2 tertua (system+user atau assistant+user)
+            }
+        }
+
+        function addMessage(text, isUser, isHtml) {
             const welcome = document.getElementById('welcomeMsg');
             if (welcome && isUser) welcome.style.display = 'none';
 
@@ -338,12 +471,20 @@
 
             if (isUser) {
                 // Pesan user — selalu di-escape untuk keamanan
-                row.innerHTML = '<div class="msg-bubble">' + escapeHtml(html) + '</div>';
-            } else {
-                // Pesan bot — HTML aman (dari backend), langsung di-render
+                row.innerHTML = '<div class="msg-bubble">' + escapeHtml(text) + '</div>';
+            } else if (isHtml) {
+                // Pesan bot — HTML aman (dari backend deteksi gambar), langsung di-render
                 row.innerHTML =
                     '<div class="msg-avatar"><i data-lucide="bot"></i></div>' +
-                    '<div class="msg-bubble bot-html">' + html +
+                    '<div class="msg-bubble bot-html">' + text +
+                    '<div class="bubble-actions">' +
+                    '<button onclick="copyText(this)" title="Salin"><i data-lucide="copy"></i></button>' +
+                    '</div></div>';
+            } else {
+                // Pesan bot teks biasa — escape dulu baru render
+                row.innerHTML =
+                    '<div class="msg-avatar"><i data-lucide="bot"></i></div>' +
+                    '<div class="msg-bubble bot-html">' + escapeHtml(text).replace(/\n/g, '<br>') +
                     '<div class="bubble-actions">' +
                     '<button onclick="copyText(this)" title="Salin"><i data-lucide="copy"></i></button>' +
                     '</div></div>';
@@ -383,47 +524,66 @@
         }
 
         /**
-         * Kirim pesan teks atau gambar ke backend proses_chat.php
+         * Kirim pesan teks — respon pakai template berdasarkan kata kunci
          */
-        function prosesKirim(file = null) {
-            const text = chatInput.value.trim();
-            if (!text && !file) return;
+        function kirimKeLLM(text) {
+            // Tampilkan pesan user
+            addMessage(text, true, false);
 
-            let formData = new FormData();
+            chatInput.value = '';
 
-            if (file) {
-                // Tampilkan preview upload user
-                addMessage('[Mengirim Gambar: ' + file.name + ']', true);
-                formData.append('gambar', file);
-            } else {
-                addMessage(text, true);
-                formData.append('pesan', text);
-            }
+            // Cocokkan dengan template dan kirim langsung (tanpa loading)
+            var reply = matchTemplate(text);
+            addMessage(reply, false, true); // isHtml=true karena template pakai HTML
+        }
+
+        /**
+         * Kirim gambar ke YOLO detector via proses_chat.php
+         */
+        function kirimGambarKeYOLO(file) {
+            addMessage('[Mengirim Gambar: ' + file.name + ']', true, false);
+
+            var formData = new FormData();
+            formData.append('gambar', file);
 
             chatInput.value = '';
             if (fileInput) fileInput.value = '';
 
-            // Tampilkan thinking dots
             addThinking();
 
-            // Kirim ke backend via AJAX
             fetch('controller/proses_chat.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    removeThinking();
-                    if (data.status === 'success') {
-                        addMessage(data.pesan, false);
-                    } else {
-                        addMessage('Gagal memproses: ' + (data.error || 'Terjadi kesalahan.'), false);
-                    }
-                })
-                .catch(err => {
-                    removeThinking();
-                    addMessage('Terjadi kesalahan sistem. Silakan coba lagi.', false);
-                });
+                method: 'POST',
+                body: formData
+            })
+            .then(function (resp) { return resp.json(); })
+            .then(function (data) {
+                removeThinking();
+                if (data.status === 'success') {
+                    addMessage(data.pesan, false, true); // HTML
+                    // Simpan info deteksi ke history sebagai teks
+                    var stripText = data.pesan.replace(/<[^>]*>/g, '').trim();
+                    addToHistory('assistant', '[Deteksi Gambar] ' + stripText);
+                } else {
+                    addMessage('Gagal memproses gambar: ' + (data.error || 'Terjadi kesalahan.'), false, false);
+                }
+            })
+            .catch(function (err) {
+                removeThinking();
+                addMessage('Terjadi kesalahan sistem saat memproses gambar.', false, false);
+            });
+        }
+
+        /**
+         * Kirim pesan — otomatis bedakan teks vs gambar
+         */
+        function prosesKirim(file) {
+            if (file) {
+                kirimGambarKeYOLO(file);
+            } else {
+                var text = chatInput.value.trim();
+                if (!text) return;
+                kirimKeLLM(text);
+            }
         }
 
         // Upload button: trigger hidden file input
@@ -433,7 +593,7 @@
             });
         }
 
-        // File selected: langsung kirim gambar
+        // File selected: langsung kirim gambar ke YOLO
         if (fileInput) {
             fileInput.addEventListener('change', function () {
                 if (fileInput.files.length > 0) {
@@ -458,6 +618,8 @@
 
         function clearChat() {
             chatArea.innerHTML = welcomeHTML;
+            // Kosongkan riwayat
+            conversationHistory.length = 0;
             lucide.createIcons();
             if (typeof i18n !== 'undefined' && i18n.apply) {
                 i18n.apply();

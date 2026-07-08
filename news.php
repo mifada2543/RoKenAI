@@ -1,4 +1,4 @@
-<?php session_name('RoKenAI'); ?>
+<?php session_name('RoKenAI'); session_start(); ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>

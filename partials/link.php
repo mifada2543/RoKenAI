@@ -12,6 +12,9 @@
 <script src="assets/js/lucide.js"></script>
 <script src="assets/js/i18n.js"></script>
 
+<!-- SweetAlert2 -->
+<script src="assets/js/sweetalert2.all.min.js"></script>
+
 <!-- Tailwind CSS JIT runtime -->
 <script src="assets/js/tailwind.js"></script>
 <script>

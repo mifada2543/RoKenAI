@@ -1,9 +1,21 @@
 <?php
 include 'config.php';
 
+// Baca parameter redirect jika ada — simpan di session agar tidak hilang saat POST
+if (!empty($_GET['redirect'])) {
+    $_SESSION['login_redirect'] = $_GET['redirect'];
+}
+$redirectUrl = $_SESSION['login_redirect'] ?? null;
+
+// Validasi redirect URL — tolak URL absolute (://) dan protocol-relative (//)
+if ($redirectUrl && (strpos($redirectUrl, '://') !== false || strpos($redirectUrl, '//') === 0)) {
+    $redirectUrl = null;
+    unset($_SESSION['login_redirect']);
+}
+
 // Redirect if already logged in
 if (isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true) {
-    header('Location: ../index.php');
+    header('Location: ' . ($redirectUrl ?: '../profile.php'));
     exit;
 }
 
@@ -40,7 +52,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
                         $_SESSION['username']       = $user['username'];
                         $_SESSION['role']           = $user['role'];
                         session_regenerate_id(true);
-                        header('Location: ../index.php');
+                        // Redirect admin ke panel admin
+                        if ($user['role'] === 'admin' && !$redirectUrl) {
+                            $redirectUrl = '../admin/index.php';
+                        }
+                        $finalRedirect = $redirectUrl ?: '../profile.php';
+                        unset($_SESSION['login_redirect']);
+                        header('Location: ' . $finalRedirect);
                         exit;
                     }
                 } else {

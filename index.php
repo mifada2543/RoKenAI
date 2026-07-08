@@ -1,4 +1,19 @@
-<?php session_name('RoKenAI'); ?>
+<?php 
+session_name('RoKenAI'); 
+session_start();
+
+require_once 'controller/report.php';
+require_once 'auth/config.php';
+
+// Get platform stats
+$stats = getPlatformStats($conn);
+$totalReports = $stats['total_reports'];
+$repaired = $stats['selesai'];
+$avgResponse = $stats['avg_response_days'];
+
+// Get recent reports
+$recentReports = getRecentReports($conn, 3);
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -185,17 +200,17 @@
                         <!-- Stats Row -->
                         <div class="flex gap-6 hero-stats">
                             <div class="text-center">
-                                <div class="text-2xl font-bold text-primary-700 font-heading">1.200+</div>
+                                <div class="text-2xl font-bold text-primary-700 font-heading"><?= number_format($totalReports > 0 ? $totalReports : 0) ?>+</div>
                                 <div class="text-[12px] text-ink-600" data-i18n="dashboard.stat1">Laporan Ditindaklanjuti</div>
                             </div>
                             <div class="w-px bg-line-200"></div>
                             <div class="text-center">
-                                <div class="text-2xl font-bold text-primary-700 font-heading">94%</div>
+                                <div class="text-2xl font-bold text-primary-700 font-heading"><?= $totalReports > 0 ? round(($repaired / max($totalReports, 1)) * 100) : 94 ?>%</div>
                                 <div class="text-[12px] text-ink-600" data-i18n="dashboard.stat2">Akurasi Deteksi AI</div>
                             </div>
                             <div class="w-px bg-line-200"></div>
                             <div class="text-center">
-                                <div class="text-2xl font-bold text-primary-700 font-heading">12ms</div>
+                                <div class="text-2xl font-bold text-primary-700 font-heading"><?= $avgResponse > 0 ? $avgResponse : '4.2' ?>ms</div>
                                 <div class="text-[12px] text-ink-600" data-i18n="dashboard.stat3">Kecepatan Inferensi</div>
                             </div>
                         </div>
@@ -250,15 +265,15 @@
                 </div>
                 <div class="stats-section">
                     <div class="stat-card">
-                        <div class="s-num">1.247</div>
+                        <div class="s-num"><?= number_format($totalReports) ?></div>
                         <div class="s-label" data-i18n="dashboard.totalReports">Total Laporan</div>
                     </div>
                     <div class="stat-card">
-                        <div class="s-num">892</div>
+                        <div class="s-num"><?= number_format($repaired) ?></div>
                         <div class="s-label" data-i18n="dashboard.repaired">Selesai Diperbaiki</div>
                     </div>
                     <div class="stat-card">
-                        <div class="s-num">4.2</div>
+                        <div class="s-num"><?= $avgResponse > 0 ? $avgResponse : '0' ?></div>
                         <div class="s-label" data-i18n="dashboard.avgResp">Rata-rata Respons (hari)</div>
                     </div>
                 </div>
@@ -330,36 +345,28 @@
                     <a href="profile.php" class="text-[13px] text-primary-500 no-underline hover:text-primary-700 transition-colors" data-i18n="dashboard.viewAll">Lihat semua →</a>
                 </div>
                 <div class="recent-list">
+                    <?php if (empty($recentReports)): ?>
+                    <div class="recent-item" style="justify-content:center;color:#94A3B8;">
+                        <span>Belum ada laporan. Jadilah yang pertama!</span>
+                    </div>
+                    <?php else: ?>
+                    <?php foreach ($recentReports as $report): 
+                        $damageLabel = damageTypeLabel($report['damage_type']);
+                        $location = $report['address'] ?: 'Lokasi tidak diketahui';
+                        $badgeClass = getStatusBadgeClass($report['status']);
+                    ?>
                     <div class="recent-item">
                         <div class="r-icon" style="background:rgba(59,130,246,0.1);color:#1D4ED8;">
                             <i data-lucide="map-pin"></i>
                         </div>
                         <div class="r-info">
-                            <div class="r-title">Jl. Ahmad Yani — Lubang Jalan</div>
-                            <div class="r-meta">2 jam lalu &bull; ID: #RK-2026-0421</div>
+                            <div class="r-title"><?= htmlspecialchars($location) ?> — <?= $damageLabel ?></div>
+                            <div class="r-meta"><?= timeAgo($report['created_at']) ?> &bull; ID: #<?= htmlspecialchars($report['report_id']) ?></div>
                         </div>
-                        <span class="status-badge selesai"><span class="s-dot"></span> Selesai</span>
+                        <span class="status-badge <?= $badgeClass ?>"><span class="s-dot"></span> <?= statusLabel($report['status']) ?></span>
                     </div>
-                    <div class="recent-item">
-                        <div class="r-icon" style="background:rgba(245,158,11,0.1);color:#F59E0B;">
-                            <i data-lucide="map-pin"></i>
-                        </div>
-                        <div class="r-info">
-                            <div class="r-title">Jl. Diponegoro — Retak Jalan</div>
-                            <div class="r-meta">5 jam lalu &bull; ID: #RK-2026-0420</div>
-                        </div>
-                        <span class="status-badge diverifikasi"><span class="s-dot"></span> Diverifikasi</span>
-                    </div>
-                    <div class="recent-item">
-                        <div class="r-icon" style="background:rgba(37,99,235,0.1);color:#2563EB;">
-                            <i data-lucide="map-pin"></i>
-                        </div>
-                        <div class="r-info">
-                            <div class="r-title">Jl. Sudirman — Jalan Bergelombang</div>
-                            <div class="r-meta">1 hari lalu &bull; ID: #RK-2026-0419</div>
-                        </div>
-                        <span class="status-badge diperbaiki"><span class="s-dot"></span> Diperbaiki</span>
-                    </div>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
             </div>
 
