@@ -492,7 +492,8 @@ if ($usrStmt) {
     <script id="adminData" type="application/json"><?= json_encode([
         'stats' => $statsData,
         'reports' => $reportsData,
-        'users' => $usersData
+        'users' => $usersData,
+        'csrf_token' => $_SESSION['csrf_token']
     ]) ?></script>
 
     <script>
@@ -646,6 +647,7 @@ if ($usrStmt) {
             formData.append('action', 'update_report_status');
             formData.append('id', id);
             formData.append('status', status);
+            formData.append('csrf_token', adminData ? adminData.csrf_token : '');
 
             fetch('../controller/admin_handler.php', { method: 'POST', body: formData })
             .then(function(r) { return r.json(); })
@@ -716,6 +718,7 @@ if ($usrStmt) {
             var formData = new FormData();
             formData.append('action', 'approve_user');
             formData.append('id', id);
+            formData.append('csrf_token', adminData ? adminData.csrf_token : '');
             fetch('../controller/admin_handler.php', { method: 'POST', body: formData })
             .then(function(r) { return r.json(); })
             .then(function(data) {
@@ -732,6 +735,7 @@ if ($usrStmt) {
             var formData = new FormData();
             formData.append('action', 'toggle_user_status');
             formData.append('id', id);
+            formData.append('csrf_token', adminData ? adminData.csrf_token : '');
             fetch('../controller/admin_handler.php', { method: 'POST', body: formData })
             .then(function(r) { return r.json(); })
             .then(function(data) {
@@ -749,6 +753,7 @@ if ($usrStmt) {
             formData.append('action', 'update_user_role');
             formData.append('id', id);
             formData.append('role', role);
+            formData.append('csrf_token', adminData ? adminData.csrf_token : '');
             fetch('../controller/admin_handler.php', { method: 'POST', body: formData })
             .then(function(r) { return r.json(); })
             .then(function(data) {
