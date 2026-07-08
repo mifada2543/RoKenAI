@@ -14,13 +14,11 @@ if (isset($_SESSION['user_logged_in']) && $_SESSION['user_logged_in'] === true) 
     $user = getUserById($conn, $userId);
 }
 
-// Jika belum login, redirect ke halaman login
 if (!$userId || !$user) {
     header('Location: auth/login.php?redirect=' . urlencode($_SERVER['REQUEST_URI']));
     exit;
 }
 
-// Get user initials for avatar
 $initials = '??';
 $displayName = 'Pengguna';
 $displayEmail = '';
@@ -35,29 +33,19 @@ if ($user) {
     }
 }
 
-// Get user stats
 $userStats = ['total' => 0, 'selesai' => 0, 'in_progress' => 0, 'response_rate' => 0];
-if ($userId) {
-    $userStats = getUserStats($conn, $userId);
-}
+if ($userId) $userStats = getUserStats($conn, $userId);
 
-// Get user reports
 $reports = [];
-if ($userId) {
-    $reports = getUserReports($conn, $userId);
-}
+if ($userId) $reports = getUserReports($conn, $userId);
 
-// Helper for Garis Jalan — reused in report rendering
 function isStepActive($stepIndex, $status) {
     $steps = ['dilaporkan' => 0, 'diverifikasi' => 1, 'diperbaiki' => 2, 'selesai' => 3];
-    $currentStep = $steps[$status] ?? 0;
-    return $stepIndex <= $currentStep;
+    return ($steps[$status] ?? 0) >= $stepIndex;
 }
-
 function getProgressWidth($status) {
     $steps = ['dilaporkan' => 0, 'diverifikasi' => 1, 'diperbaiki' => 2, 'selesai' => 3];
-    $currentStep = $steps[$status] ?? 0;
-    return ($currentStep / 3) * 100;
+    return (($steps[$status] ?? 0) / 3) * 100;
 }
 ?>
 <!DOCTYPE html>
@@ -67,407 +55,83 @@ function getProgressWidth($status) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profil | RoKenAI</title>
     <?php include 'partials/link.php'; ?>
-    <style>
-        /* ================================================================
-           RoKenAI — Halaman Profil
-           Header profil, riwayat laporan dengan progress line, tab
-           ================================================================ */
-
-        .profile-layout {
-            max-width: 960px;
-            margin: 0 auto;
-            padding: 24px 24px 48px;
-            animation: fadeInUp 0.5s ease;
-        }
-
-        /* ===== Profile Header ===== */
-        .profile-header {
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--line-200);
-            box-shadow: var(--shadow-card);
-            padding: 32px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            gap: 24px;
-            flex-wrap: wrap;
-        }
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: var(--radius-lg);
-            background: var(--primary-700);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: 700;
-            color: #fff;
-            font-family: var(--font-heading);
-            flex-shrink: 0;
-        }
-        .profile-info {
-            flex: 1;
-            min-width: 200px;
-        }
-        .profile-info h1 {
-            font-family: var(--font-heading);
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--ink-900);
-            margin-bottom: 4px;
-        }
-        .profile-info .p-email {
-            font-size: 14px;
-            color: var(--ink-600);
-            margin-bottom: 8px;
-        }
-        .profile-info .p-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 12px;
-            border-radius: var(--radius-full);
-            background: var(--primary-100);
-            color: var(--primary-700);
-            font-size: 11px;
-            font-weight: 600;
-        }
-        .profile-info .p-badge i { width: 12px; height: 12px; }
-        .profile-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        /* ===== Stats Row ===== */
-        .profile-stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        .profile-stat {
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--line-200);
-            box-shadow: var(--shadow-card);
-            padding: 16px 20px;
-            text-align: center;
-        }
-        .profile-stat .pstat-value {
-            font-family: var(--font-heading);
-            font-size: 22px;
-            font-weight: 700;
-            color: var(--ink-900);
-        }
-        .profile-stat .pstat-label {
-            font-size: 11px;
-            color: #94A3B8;
-            font-weight: 500;
-            margin-top: 4px;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        /* ===== Tabs ===== */
-        .profile-tabs {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid var(--line-200);
-            padding-bottom: 0;
-        }
-        .profile-tab {
-            padding: 10px 20px;
-            font-size: 13px;
-            font-weight: 500;
-            color: var(--ink-600);
-            cursor: pointer;
-            border: none;
-            background: transparent;
-            font-family: var(--font-body);
-            border-bottom: 2px solid transparent;
-            margin-bottom: -1px;
-            transition: all 0.2s ease;
-        }
-        .profile-tab:hover {
-            color: var(--primary-700);
-        }
-        .profile-tab.active {
-            color: var(--primary-700);
-            border-bottom-color: var(--primary-700);
-            font-weight: 600;
-        }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        /* ===== Card dalam Tab ===== */
-        .profile-card {
-            background: var(--surface);
-            border-radius: var(--radius-lg);
-            border: 1px solid var(--line-200);
-            box-shadow: var(--shadow-card);
-            overflow: hidden;
-            margin-bottom: 16px;
-        }
-        .profile-card-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--line-200);
-        }
-        .profile-card-header h2 {
-            font-family: var(--font-heading);
-            font-size: 15px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--ink-900);
-        }
-        .profile-card-header h2 i { width: 16px; height: 16px; color: var(--primary-700); }
-        .profile-card-body {
-            padding: 18px 24px 24px;
-        }
-
-        /* ===== Form Fields ===== */
-        .form-group {
-            margin-bottom: 16px;
-        }
-        .form-group:last-child { margin-bottom: 0; }
-        .form-label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--ink-600);
-            margin-bottom: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-        }
-        .form-input {
-            width: 100%;
-            padding: 10px 14px;
-            border-radius: var(--radius-sm);
-            background: var(--surface);
-            border: 1.5px solid var(--line-200);
-            color: var(--ink-900);
-            font-size: 13px;
-            font-family: var(--font-body);
-            outline: none;
-            transition: all 0.2s ease;
-        }
-        .form-input:focus {
-            border-color: var(--primary-500);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-        .form-input:disabled {
-            background: var(--surface-muted);
-            color: #94A3B8;
-        }
-
-        /* ===== Riwayat Laporan ===== */
-        .report-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .report-card {
-            background: var(--surface);
-            border-radius: var(--radius-md);
-            border: 1px solid var(--line-200);
-            padding: 16px 20px;
-            transition: all 0.2s ease;
-        }
-        .report-card:hover {
-            border-color: var(--primary-100);
-            box-shadow: var(--shadow-glow);
-        }
-        .report-card .r-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        .report-card .r-title {
-            font-family: var(--font-heading);
-            font-size: 14px;
-            font-weight: 600;
-            color: var(--ink-900);
-        }
-        .report-card .r-id {
-            font-family: var(--font-mono);
-            font-size: 11px;
-            color: #94A3B8;
-        }
-        .report-card .r-meta {
-            display: flex;
-            gap: 12px;
-            font-size: 12px;
-            color: #94A3B8;
-            margin-top: 6px;
-        }
-        .report-card .r-meta i { width: 14px; height: 14px; vertical-align: middle; }
-
-        /* ===== Aktivitas Terbaru ===== */
-        .activity-item {
-            display: flex;
-            gap: 12px;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--line-200);
-        }
-        .activity-item:last-child { border-bottom: none; }
-        .activity-icon {
-            width: 36px; height: 36px; min-width: 36px;
-            border-radius: var(--radius-sm);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .activity-icon i { width: 16px; height: 16px; }
-        .activity-text { flex: 1; }
-        .activity-text .atitle {
-            font-size: 13px;
-            color: var(--ink-900);
-            font-weight: 500;
-        }
-        .activity-text .atime {
-            font-size: 11px;
-            color: #94A3B8;
-            margin-top: 2px;
-        }
-
-        /* ===== Tombol (karena tidak pakai Bootstrap) ===== */
-        .btn-primary {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 10px 20px; border-radius: 8px; border: none;
-            background: #1D4ED8; color: #fff;
-            font-family: var(--font-body); font-size: 13px; font-weight: 600;
-            cursor: pointer; transition: all 0.2s ease;
-            box-shadow: 0 2px 6px rgba(29,78,216,0.2);
-        }
-        .btn-primary:hover { background: #3B82F6; transform: translateY(-1px); }
-        .btn-secondary {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 10px 20px; border-radius: 8px;
-            background: transparent; color: #475569;
-            border: 1.5px solid #E2E8F0;
-            font-family: var(--font-body); font-size: 13px; font-weight: 500;
-            cursor: pointer; transition: all 0.2s ease;
-        }
-        .btn-secondary:hover { background: #F8FAFC; border-color: #CBD5E1; }
-
-        /* ===== Responsive ===== */
-        @media (max-width: 768px) {
-            .profile-header { flex-direction: column; text-align: center; padding: 24px; }
-            .profile-actions { width: 100%; justify-content: center; }
-            .profile-stats { grid-template-columns: repeat(2, 1fr); }
-        }
-        @media (max-width: 480px) {
-            .profile-layout { padding: 16px; }
-            .profile-avatar { width: 64px; height: 64px; font-size: 22px; }
-            .profile-info h1 { font-size: 18px; }
-            .profile-stats { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-            .profile-stat { padding: 12px 16px; }
-            .profile-card-body { padding: 14px 16px 20px; }
-            .profile-card-header { padding: 14px 16px; }
-        }
-    </style>
 </head>
 <body>
     <?php include 'partials/header.php'; ?>
 
     <div id="content-wrapper">
-        <div class="profile-layout page-enter">
+        <div class="max-w-[960px] mx-auto px-6 py-6 pb-12 animate-fade-in-up">
 
-            <!-- ===== Profile Header ===== -->
-            <div class="profile-header">
-                <div class="profile-avatar"><?= $initials ?></div>
-                <div class="profile-info">
-                    <h1><?= $displayName ?></h1>
-                    <div class="p-email"><?= $displayEmail ?></div>
-                    <span class="p-badge"><i data-lucide="award"></i> Pelapor Aktif</span>
+            <!-- Profile Header -->
+            <div class="bg-white rounded-xl border border-[#E2E8F0] shadow-card p-8 mb-6 flex items-center gap-6 flex-wrap">
+                <div class="w-20 h-20 rounded-xl bg-[#1D4ED8] flex items-center justify-center text-[28px] font-bold text-white font-heading shrink-0">
+                    <?= $initials ?>
                 </div>
-                <div class="profile-actions">
-                    <button class="btn-secondary" style="padding:8px 16px;font-size:12px;">
-                        <i data-lucide="share-2"></i> Bagikan
-                    </button>
-                    <button class="btn-primary" style="padding:8px 16px;font-size:12px;" onclick="document.querySelector('[data-tab=\'data-diri\']').click()">
-                        <i data-lucide="edit-3"></i> Edit Profil
+                <div class="flex-1 min-w-[200px]">
+                    <h1 class="font-heading text-[22px] font-bold text-[#0F172A] mb-1"><?= $displayName ?></h1>
+                    <div class="text-[14px] text-[#475569] mb-2"><?= $displayEmail ?></div>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary-light text-[#1D4ED8] text-[11px] font-semibold">
+                        <i data-lucide="award" style="width:12px;height:12px;"></i> Pelapor Aktif
+                    </span>
+                </div>
+                <div class="flex gap-2">
+                    <button class="px-4 py-2 rounded-lg bg-transparent text-[#475569] border border-[#E2E8F0] text-[12px] font-medium cursor-pointer transition-all duration-200 hover:bg-[#F8FAFC] hover:border-[#CBD5E1]" onclick="document.querySelector('[data-tab=\\'data-diri\\']').click()">
+                        <i data-lucide="edit-3" style="width:15px;height:15px;"></i> Edit Profil
                     </button>
                 </div>
             </div>
 
-            <!-- ===== Stats ===== -->
-            <div class="profile-stats">
-                <div class="profile-stat">
-                    <div class="pstat-value"><?= $userStats['total'] ?></div>
-                    <div class="pstat-label">Total Laporan</div>
+            <!-- Stats -->
+            <div class="grid grid-cols-4 max-sm:grid-cols-2 gap-3 mb-6">
+                <div class="bg-white rounded-xl border border-[#E2E8F0] shadow-card p-4 text-center">
+                    <div class="font-heading text-[22px] font-bold text-[#0F172A]"><?= $userStats['total'] ?></div>
+                    <div class="text-[11px] text-[#94A3B8] font-medium mt-1 uppercase tracking-[0.04em]">Total Laporan</div>
                 </div>
-                <div class="profile-stat">
-                    <div class="pstat-value"><?= $userStats['selesai'] ?></div>
-                    <div class="pstat-label">Selesai</div>
+                <div class="bg-white rounded-xl border border-[#E2E8F0] shadow-card p-4 text-center">
+                    <div class="font-heading text-[22px] font-bold text-[#0F172A]"><?= $userStats['selesai'] ?></div>
+                    <div class="text-[11px] text-[#94A3B8] font-medium mt-1 uppercase tracking-[0.04em]">Selesai</div>
                 </div>
-                <div class="profile-stat">
-                    <div class="pstat-value"><?= $userStats['in_progress'] ?></div>
-                    <div class="pstat-label">Dalam Proses</div>
+                <div class="bg-white rounded-xl border border-[#E2E8F0] shadow-card p-4 text-center">
+                    <div class="font-heading text-[22px] font-bold text-[#0F172A]"><?= $userStats['in_progress'] ?></div>
+                    <div class="text-[11px] text-[#94A3B8] font-medium mt-1 uppercase tracking-[0.04em]">Dalam Proses</div>
                 </div>
-                <div class="profile-stat">
-                    <div class="pstat-value"><?= $userStats['response_rate'] ?>%</div>
-                    <div class="pstat-label">Respons Rate</div>
+                <div class="bg-white rounded-xl border border-[#E2E8F0] shadow-card p-4 text-center">
+                    <div class="font-heading text-[22px] font-bold text-[#0F172A]"><?= $userStats['response_rate'] ?>%</div>
+                    <div class="text-[11px] text-[#94A3B8] font-medium mt-1 uppercase tracking-[0.04em]">Respons Rate</div>
                 </div>
             </div>
 
-            <!-- ===== Tabs ===== -->
-            <div class="profile-tabs">
+            <!-- Tabs -->
+            <div class="flex gap-1 mb-5 border-b border-[#E2E8F0] pb-0">
                 <button class="profile-tab active" data-tab="data-diri" onclick="switchTab('data-diri', this)">Data Diri</button>
                 <button class="profile-tab" data-tab="riwayat" onclick="switchTab('riwayat', this)">Riwayat Laporan</button>
                 <button class="profile-tab" data-tab="password" onclick="switchTab('password', this)">Ubah Password</button>
             </div>
 
-            <!-- ===== TAB: Data Diri ===== -->
+            <!-- TAB: Data Diri -->
             <div class="tab-content active" id="tab-data-diri">
-                <div class="profile-card">
-                    <div class="profile-card-header">
-                        <h2><i data-lucide="user"></i> Informasi Akun</h2>
-                        <button class="btn-primary" style="padding:6px 14px;font-size:11px;" onclick="submitProfile()">
-                            Simpan
-                        </button>
+                <div class="bg-white rounded-xl border border-[#E2E8F0] shadow-card overflow-hidden mb-4">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0]">
+                        <h2 class="font-heading text-[15px] font-semibold flex items-center gap-2 text-[#0F172A]"><i data-lucide="user" style="width:16px;height:16px;color:#1D4ED8;"></i> Informasi Akun</h2>
+                        <button class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border-none bg-[#1D4ED8] text-white text-[11px] font-semibold cursor-pointer shadow-[0_2px_6px_rgba(29,78,216,0.2)] transition-all duration-200 hover:bg-[#3B82F6] hover:-translate-y-0.5" onclick="submitProfile()">Simpan</button>
                     </div>
-                    <div class="profile-card-body">
+                    <div class="px-6 py-[18px] pb-6">
                         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                        <div class="form-group">
-                            <label class="form-label">Username</label>
-                            <input class="form-input" type="text" value="<?= htmlspecialchars($user['username'] ?? '') ?>" disabled>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Nama Lengkap</label>
-                            <input class="form-input" type="text" id="inputFullName" value="<?= htmlspecialchars($user['full_name'] ?? '') ?>" placeholder="Nama lengkap">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Email</label>
-                            <input class="form-input" type="email" id="inputEmail" value="<?= htmlspecialchars($user['email'] ?? '') ?>" placeholder="Email">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Nomor Telepon</label>
-                            <input class="form-input" type="tel" id="inputPhone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>" placeholder="No. telepon">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Alamat</label>
-                            <input class="form-input" type="text" id="inputAddress" value="<?= htmlspecialchars($user['address'] ?? '') ?>" placeholder="Alamat">
-                        </div>
+                        <div class="mb-4"><label class="block text-[12px] font-semibold text-[#475569] mb-1.5 uppercase tracking-[0.03em]">Username</label><input class="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] text-[13px] outline-none transition-all duration-200 focus:border-[#3B82F6] focus:ring-[3px] focus:ring-[rgba(59,130,246,0.1)] disabled:bg-[#F8FAFC] disabled:text-[#94A3B8]" type="text" value="<?= htmlspecialchars($user['username'] ?? '') ?>" disabled></div>
+                        <div class="mb-4"><label class="block text-[12px] font-semibold text-[#475569] mb-1.5 uppercase tracking-[0.03em]">Nama Lengkap</label><input class="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] text-[13px] outline-none transition-all duration-200 focus:border-[#3B82F6] focus:ring-[3px] focus:ring-[rgba(59,130,246,0.1)]" type="text" id="inputFullName" value="<?= htmlspecialchars($user['full_name'] ?? '') ?>" placeholder="Nama lengkap"></div>
+                        <div class="mb-4"><label class="block text-[12px] font-semibold text-[#475569] mb-1.5 uppercase tracking-[0.03em]">Email</label><input class="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] text-[13px] outline-none transition-all duration-200 focus:border-[#3B82F6] focus:ring-[3px] focus:ring-[rgba(59,130,246,0.1)]" type="email" id="inputEmail" value="<?= htmlspecialchars($user['email'] ?? '') ?>" placeholder="Email"></div>
+                        <div class="mb-4"><label class="block text-[12px] font-semibold text-[#475569] mb-1.5 uppercase tracking-[0.03em]">Nomor Telepon</label><input class="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] text-[13px] outline-none transition-all duration-200 focus:border-[#3B82F6] focus:ring-[3px] focus:ring-[rgba(59,130,246,0.1)]" type="tel" id="inputPhone" value="<?= htmlspecialchars($user['phone'] ?? '') ?>" placeholder="No. telepon"></div>
+                        <div class="mb-4"><label class="block text-[12px] font-semibold text-[#475569] mb-1.5 uppercase tracking-[0.03em]">Alamat</label><input class="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] text-[13px] outline-none transition-all duration-200 focus:border-[#3B82F6] focus:ring-[3px] focus:ring-[rgba(59,130,246,0.1)]" type="text" id="inputAddress" value="<?= htmlspecialchars($user['address'] ?? '') ?>" placeholder="Alamat"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- ===== TAB: Riwayat Laporan ===== -->
-            <div class="tab-content" id="tab-riwayat">
-                <div class="report-list">
-
+            <!-- TAB: Riwayat Laporan -->
+            <div class="tab-content hidden" id="tab-riwayat">
+                <div class="flex flex-col gap-3">
                     <?php if (empty($reports)): ?>
-                    <div style="text-align:center;padding:40px 20px;color:#94A3B8;">
-                        <i data-lucide="inbox" style="width:48px;height:48px;margin-bottom:12px;opacity:0.5;"></i>
+                    <div class="text-center py-10 px-5 text-[#94A3B8]">
+                        <i data-lucide="inbox" style="width:48px;height:48px;margin-bottom:12px;opacity:0.5;display:inline-block;"></i>
                         <p style="font-size:14px;font-weight:500;color:#64748B;margin-bottom:4px;">Belum ada laporan</p>
                         <p style="font-size:12px;">Laporkan kerusakan jalan pertama Anda melalui menu Lapor Kerusakan.</p>
                     </div>
@@ -478,10 +142,10 @@ function getProgressWidth($status) {
                         $title = damageTypeLabel($report['damage_type']);
                         $location = $report['address'] ?: 'Lokasi tidak diketahui';
                     ?>
-                    <div class="report-card">
-                        <div class="r-header">
-                            <span class="r-title"><?= htmlspecialchars($location) ?> — <?= $title ?></span>
-                            <span class="r-id">#<?= htmlspecialchars($report['report_id']) ?></span>
+                    <div class="bg-white rounded-[10px] border border-[#E2E8F0] p-4 transition-all duration-200 hover:border-primary-light hover:shadow-glow">
+                        <div class="flex items-center justify-between mb-2.5">
+                            <span class="font-heading text-[14px] font-semibold text-[#0F172A]"><?= htmlspecialchars($location) ?> — <?= $title ?></span>
+                            <span class="font-mono text-[11px] text-[#94A3B8]">#<?= htmlspecialchars($report['report_id']) ?></span>
                         </div>
                         <!-- Garis Jalan Progress -->
                         <div class="garis-jalan mini" style="margin:8px 0;">
@@ -493,75 +157,55 @@ function getProgressWidth($status) {
                             </div>
                             <?php endforeach; ?>
                         </div>
-                        <div class="r-meta">
-                            <span><i data-lucide="calendar"></i> <?= date('j M Y', strtotime($report['created_at'])) ?></span>
-                            <?php if ($report['address']): ?>
-                            <span><i data-lucide="map-pin"></i> <?= htmlspecialchars($report['address']) ?></span>
-                            <?php endif; ?>
-                            <span class="status-badge <?= getStatusBadgeClass($report['status']) ?>">
-                                <span class="s-dot"></span> <?= statusLabel($report['status']) ?>
-                            </span>
+                        <div class="flex gap-3 text-[12px] text-[#94A3B8] mt-1.5 flex-wrap">
+                            <span><i data-lucide="calendar" style="width:14px;height:14px;vertical-align:middle;"></i> <?= date('j M Y', strtotime($report['created_at'])) ?></span>
+                            <?php if ($report['address']): ?><span><i data-lucide="map-pin" style="width:14px;height:14px;vertical-align:middle;"></i> <?= htmlspecialchars($report['address']) ?></span><?php endif; ?>
+                            <span class="status-badge <?= getStatusBadgeClass($report['status']) ?>"><span class="s-dot"></span> <?= statusLabel($report['status']) ?></span>
                         </div>
                     </div>
                     <?php endforeach; ?>
                     <?php endif; ?>
-
                 </div>
             </div>
 
-            <!-- ===== TAB: Ubah Password ===== -->
-            <div class="tab-content" id="tab-password">
-                <div class="profile-card">
-                    <div class="profile-card-header">
-                        <h2><i data-lucide="lock"></i> Ubah Password</h2>
+            <!-- TAB: Ubah Password -->
+            <div class="tab-content hidden" id="tab-password">
+                <div class="bg-white rounded-xl border border-[#E2E8F0] shadow-card overflow-hidden mb-4">
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-[#E2E8F0]">
+                        <h2 class="font-heading text-[15px] font-semibold flex items-center gap-2 text-[#0F172A]"><i data-lucide="lock" style="width:16px;height:16px;color:#1D4ED8;"></i> Ubah Password</h2>
                     </div>
-                    <div class="profile-card-body">
+                    <div class="px-6 py-[18px] pb-6">
                         <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
-                        <div class="form-group">
-                            <label class="form-label">Password Saat Ini</label>
-                            <input class="form-input" type="password" id="pwCurrent" placeholder="Masukkan password saat ini">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Password Baru</label>
-                            <input class="form-input" type="password" id="pwNew" placeholder="Min. 8 karakter">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Konfirmasi Password Baru</label>
-                            <input class="form-input" type="password" id="pwConfirm" placeholder="Ulangi password baru">
-                        </div>
-                        <button class="btn-primary" style="margin-top:8px;" onclick="submitPassword()">
-                            <i data-lucide="save"></i> Simpan Password
-                        </button>
+                        <div class="mb-4"><label class="block text-[12px] font-semibold text-[#475569] mb-1.5 uppercase tracking-[0.03em]">Password Saat Ini</label><input class="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] text-[13px] outline-none transition-all duration-200 focus:border-[#3B82F6] focus:ring-[3px] focus:ring-[rgba(59,130,246,0.1)]" type="password" id="pwCurrent" placeholder="Masukkan password saat ini"></div>
+                        <div class="mb-4"><label class="block text-[12px] font-semibold text-[#475569] mb-1.5 uppercase tracking-[0.03em]">Password Baru</label><input class="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] text-[13px] outline-none transition-all duration-200 focus:border-[#3B82F6] focus:ring-[3px] focus:ring-[rgba(59,130,246,0.1)]" type="password" id="pwNew" placeholder="Min. 8 karakter"></div>
+                        <div class="mb-4"><label class="block text-[12px] font-semibold text-[#475569] mb-1.5 uppercase tracking-[0.03em]">Konfirmasi Password Baru</label><input class="w-full px-3.5 py-2.5 rounded-lg bg-white border border-[#E2E8F0] text-[#0F172A] text-[13px] outline-none transition-all duration-200 focus:border-[#3B82F6] focus:ring-[3px] focus:ring-[rgba(59,130,246,0.1)]" type="password" id="pwConfirm" placeholder="Ulangi password baru"></div>
+                        <button class="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-lg border-none bg-[#1D4ED8] text-white text-[13px] font-semibold cursor-pointer shadow-[0_2px_6px_rgba(29,78,216,0.2)] transition-all duration-200 hover:bg-[#3B82F6] hover:-translate-y-0.5 mt-2" onclick="submitPassword()"><i data-lucide="save" style="width:15px;height:15px;"></i> Simpan Password</button>
                     </div>
                 </div>
 
                 <!-- Aktivitas Terbaru -->
-                <div class="profile-card">
-                    <div class="profile-card-header">
-                        <h2><i data-lucide="activity"></i> Aktivitas Terbaru</h2>
+                <div class="bg-white rounded-xl border border-[#E2E8F0] shadow-card overflow-hidden">
+                    <div class="flex items-center px-6 py-4 border-b border-[#E2E8F0]">
+                        <h2 class="font-heading text-[15px] font-semibold flex items-center gap-2 text-[#0F172A]"><i data-lucide="activity" style="width:16px;height:16px;color:#1D4ED8;"></i> Aktivitas Terbaru</h2>
                     </div>
-                    <div class="profile-card-body" style="padding:8px 24px;">
-                        <?php 
-                        $activityReports = array_slice($reports, 0, 5);
-                        if (empty($activityReports)): ?>
-                        <div class="activity-item">
-                            <div class="activity-text">
-                                <div class="atitle" style="color:#94A3B8;">Belum ada aktivitas</div>
-                            </div>
+                    <div class="px-6 py-2">
+                        <?php $activityReports = array_slice($reports, 0, 5); ?>
+                        <?php if (empty($activityReports)): ?>
+                        <div class="flex gap-3 py-2.5">
+                            <div class="flex-1"><div style="color:#94A3B8;">Belum ada aktivitas</div></div>
                         </div>
                         <?php else: ?>
-                        <?php foreach ($activityReports as $act): 
+                        <?php foreach ($activityReports as $act):
                             $actTitle = $act['address'] ?: 'Jalan';
-                            $actLabel = $act['status'] === 'dilaporkan' ? 'Melaporkan' : 
-                                       ($act['status'] === 'selesai' ? 'Perbaikan selesai' : 'Pembaruan status');
+                            $actLabel = $act['status'] === 'dilaporkan' ? 'Melaporkan' : ($act['status'] === 'selesai' ? 'Perbaikan selesai' : 'Pembaruan status');
                         ?>
-                        <div class="activity-item">
-                            <div class="activity-icon" style="background:rgba(29,78,216,0.1);color:var(--primary-700);">
-                                <i data-lucide="<?= $act['status'] === 'selesai' ? 'check-circle-2' : 'upload' ?>"></i>
+                        <div class="flex gap-3 py-2.5 border-b border-[#E2E8F0] last:border-none">
+                            <div class="w-9 h-9 min-w-[36px] rounded-lg bg-[rgba(29,78,216,0.1)] flex items-center justify-center text-[#1D4ED8]">
+                                <i data-lucide="<?= $act['status'] === 'selesai' ? 'check-circle-2' : 'upload' ?>" style="width:16px;height:16px;"></i>
                             </div>
-                            <div class="activity-text">
-                                <div class="atitle"><?= $actLabel ?> di <?= htmlspecialchars($actTitle) ?></div>
-                                <div class="atime"><?= timeAgo($act['created_at']) ?></div>
+                            <div class="flex-1">
+                                <div class="text-[13px] text-[#0F172A] font-medium"><?= $actLabel ?> di <?= htmlspecialchars($actTitle) ?></div>
+                                <div class="text-[11px] text-[#94A3B8] mt-0.5"><?= timeAgo($act['created_at']) ?></div>
                             </div>
                         </div>
                         <?php endforeach; ?>
@@ -575,42 +219,45 @@ function getProgressWidth($status) {
 
     <?php include 'partials/footer.php'; ?>
 
+    <style>
+        .profile-tab {
+            padding: 10px 20px; font-size: 13px; font-weight: 500;
+            color: #475569; cursor: pointer; border: none;
+            background: transparent; border-bottom: 2px solid transparent;
+            margin-bottom: -1px; transition: all 0.2s ease;
+        }
+        .profile-tab:hover { color: #1D4ED8; }
+        .profile-tab.active { color: #1D4ED8; border-bottom-color: #1D4ED8; font-weight: 600; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeInUp 0.3s ease; }
+        @media (max-width: 768px) {
+            .p-8 { flex-direction: column; text-align: center; padding: 24px; }
+            .flex.gap-2 { width: 100%; justify-content: center; }
+        }
+        @media (max-width: 480px) {
+            .max-w-\[960px\] { padding: 16px; }
+        }
+    </style>
+
     <script>
         lucide.createIcons();
 
-        // ================================================================
-        // LOGIKA TAB
-        // Penjelasan: Fungsi switchTab untuk mengganti tab yang aktif
-        // (Data Diri, Riwayat Laporan, Ubah Password).
-        // ================================================================
         function switchTab(tabName, btn) {
-            document.querySelectorAll('.tab-content').forEach(function(el) {
-                el.classList.remove('active');
-            });
-            document.querySelectorAll('.profile-tab').forEach(function(el) {
-                el.classList.remove('active');
-            });
-            document.getElementById('tab-' + tabName).classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(function(el) { el.classList.remove('active'); el.classList.add('hidden'); });
+            document.querySelectorAll('.profile-tab').forEach(function(el) { el.classList.remove('active'); });
+            var tab = document.getElementById('tab-' + tabName);
+            tab.classList.add('active');
+            tab.classList.remove('hidden');
             btn.classList.add('active');
         }
 
-        // ================================================================
-        // SIMPAN DATA DIRI (via AJAX + SweetAlert)
-        // ================================================================
         function submitProfile() {
             var fullName = document.getElementById('inputFullName').value.trim();
             var email    = document.getElementById('inputEmail').value.trim();
             var phone    = document.getElementById('inputPhone').value.trim();
             var address  = document.getElementById('inputAddress').value.trim();
-
-            if (!email) {
-                Swal.fire({ icon: 'warning', title: 'Email diperlukan', text: 'Email tidak boleh kosong.', confirmButtonColor: '#F59E0B', customClass: { popup: 'rounded-[16px]' } });
-                return;
-            }
-
-            // Cari CSRF token
+            if (!email) { Swal.fire({ icon: 'warning', title: 'Email diperlukan', text: 'Email tidak boleh kosong.', confirmButtonColor: '#F59E0B', customClass: { popup: 'rounded-[16px]' } }); return; }
             var csrfToken = document.querySelector('#tab-data-diri input[name="csrf_token"]').value;
-
             var formData = new FormData();
             formData.append('action', 'update_profile');
             formData.append('csrf_token', csrfToken);
@@ -618,119 +265,40 @@ function getProgressWidth($status) {
             formData.append('email', email);
             formData.append('phone', phone);
             formData.append('address', address);
-
-            fetch('controller/profile_handler.php', {
-                method: 'POST',
-                body: formData
-            })
+            fetch('controller/profile_handler.php', { method: 'POST', body: formData })
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data.status === 'success') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Tersimpan!',
-                        text: data.message,
-                        timer: 2000,
-                        showConfirmButton: true,
-                        confirmButtonColor: '#1D4ED8',
-                        customClass: { popup: 'rounded-[16px]' }
-                    });
-                    // Update nama di profile header jika berubah
-                    if (data.data && data.data.full_name) {
-                        var nameEl = document.querySelector('.profile-info h1');
-                        if (nameEl) nameEl.textContent = data.data.full_name;
-                    }
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: data.message,
-                        confirmButtonColor: '#DC2626',
-                        customClass: { popup: 'rounded-[16px]' }
-                    });
-                }
+                    Swal.fire({ icon: 'success', title: 'Tersimpan!', text: data.message, timer: 2000, showConfirmButton: true, confirmButtonColor: '#1D4ED8', customClass: { popup: 'rounded-[16px]' } });
+                    if (data.data && data.data.full_name) { var nameEl = document.querySelector('.text-\\[22px\\].font-bold'); if (nameEl) nameEl.textContent = data.data.full_name; }
+                } else { Swal.fire({ icon: 'error', title: 'Gagal', text: data.message, confirmButtonColor: '#DC2626', customClass: { popup: 'rounded-[16px]' } }); }
             })
-            .catch(function () {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Kesalahan Sistem',
-                    text: 'Gagal terhubung ke server.',
-                    confirmButtonColor: '#DC2626',
-                    customClass: { popup: 'rounded-[16px]' }
-                });
-            });
+            .catch(function () { Swal.fire({ icon: 'error', title: 'Kesalahan Sistem', text: 'Gagal terhubung ke server.', confirmButtonColor: '#DC2626', customClass: { popup: 'rounded-[16px]' } }); });
         }
 
-        // ================================================================
-        // UBAH PASSWORD (via AJAX + SweetAlert)
-        // ================================================================
         function submitPassword() {
             var currentPw = document.getElementById('pwCurrent').value;
             var newPw     = document.getElementById('pwNew').value;
             var confirmPw = document.getElementById('pwConfirm').value;
-
-            if (!currentPw || !newPw || !confirmPw) {
-                Swal.fire({ icon: 'warning', title: 'Lengkapi data', text: 'Semua field password harus diisi.', confirmButtonColor: '#F59E0B', customClass: { popup: 'rounded-[16px]' } });
-                return;
-            }
-
-            if (newPw.length < 8) {
-                Swal.fire({ icon: 'warning', title: 'Terlalu pendek', text: 'Password baru minimal 8 karakter.', confirmButtonColor: '#F59E0B', customClass: { popup: 'rounded-[16px]' } });
-                return;
-            }
-
-            if (newPw !== confirmPw) {
-                Swal.fire({ icon: 'warning', title: 'Tidak cocok', text: 'Konfirmasi password baru tidak cocok.', confirmButtonColor: '#F59E0B', customClass: { popup: 'rounded-[16px]' } });
-                return;
-            }
-
+            if (!currentPw || !newPw || !confirmPw) { Swal.fire({ icon: 'warning', title: 'Lengkapi data', text: 'Semua field password harus diisi.', confirmButtonColor: '#F59E0B', customClass: { popup: 'rounded-[16px]' } }); return; }
+            if (newPw.length < 8) { Swal.fire({ icon: 'warning', title: 'Terlalu pendek', text: 'Password baru minimal 8 karakter.', confirmButtonColor: '#F59E0B', customClass: { popup: 'rounded-[16px]' } }); return; }
+            if (newPw !== confirmPw) { Swal.fire({ icon: 'warning', title: 'Tidak cocok', text: 'Konfirmasi password baru tidak cocok.', confirmButtonColor: '#F59E0B', customClass: { popup: 'rounded-[16px]' } }); return; }
             var csrfToken = document.querySelector('#tab-password input[name="csrf_token"]').value;
-
             var formData = new FormData();
             formData.append('action', 'change_password');
             formData.append('csrf_token', csrfToken);
             formData.append('current_password', currentPw);
             formData.append('new_password', newPw);
             formData.append('confirm_password', confirmPw);
-
-            fetch('controller/profile_handler.php', {
-                method: 'POST',
-                body: formData
-            })
+            fetch('controller/profile_handler.php', { method: 'POST', body: formData })
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data.status === 'success') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Password Diubah!',
-                        text: data.message,
-                        confirmButtonColor: '#1D4ED8',
-                        customClass: { popup: 'rounded-[16px]' }
-                    }).then(function () {
-                        // Kosongkan field password
-                        document.getElementById('pwCurrent').value = '';
-                        document.getElementById('pwNew').value = '';
-                        document.getElementById('pwConfirm').value = '';
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal',
-                        text: data.message,
-                        confirmButtonColor: '#DC2626',
-                        customClass: { popup: 'rounded-[16px]' }
-                    });
-                }
+                    Swal.fire({ icon: 'success', title: 'Password Diubah!', text: data.message, confirmButtonColor: '#1D4ED8', customClass: { popup: 'rounded-[16px]' } })
+                    .then(function () { document.getElementById('pwCurrent').value = ''; document.getElementById('pwNew').value = ''; document.getElementById('pwConfirm').value = ''; });
+                } else { Swal.fire({ icon: 'error', title: 'Gagal', text: data.message, confirmButtonColor: '#DC2626', customClass: { popup: 'rounded-[16px]' } }); }
             })
-            .catch(function () {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Kesalahan Sistem',
-                    text: 'Gagal terhubung ke server.',
-                    confirmButtonColor: '#DC2626',
-                    customClass: { popup: 'rounded-[16px]' }
-                });
-            });
+            .catch(function () { Swal.fire({ icon: 'error', title: 'Kesalahan Sistem', text: 'Gagal terhubung ke server.', confirmButtonColor: '#DC2626', customClass: { popup: 'rounded-[16px]' } }); });
         }
     </script>
 </body>
