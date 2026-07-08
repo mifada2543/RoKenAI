@@ -1,3 +1,18 @@
+<?php
+session_name('RoKenAI');
+session_start();
+
+// Ensure CSRF token is initialized
+require_once 'auth/config.php';
+
+// For demo: auto-login as first active user if not logged in
+if (!isset($_SESSION['user_logged_in']) || $_SESSION['user_logged_in'] !== true) {
+    // In demo mode, continue as guest - upload handler will assign user
+    $isGuest = true;
+} else {
+    $isGuest = false;
+}
+?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -190,9 +205,46 @@
             .dropzone { min-height: 220px; padding: 24px 16px; }
             .prev-actions { flex-direction: column; }
         }
+
+        /* Loading overlay */
+        .loading-overlay {
+            display: none;
+            position: fixed; inset: 0; z-index: 9999;
+            background: rgba(15,23,42,0.4);
+            backdrop-filter: blur(4px);
+            align-items: center; justify-content: center;
+        }
+        .loading-overlay.active { display: flex; }
+        .loading-card {
+            background: #fff; border-radius: 16px; padding: 40px;
+            text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            max-width: 320px; width: 90%;
+        }
+        .loading-spinner {
+            width: 48px; height: 48px; border: 4px solid #E2E8F0;
+            border-top-color: #1D4ED8; border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-card p {
+            font-family: var(--font-heading);
+            font-size: 15px; font-weight: 600; color: #0F172A; margin-bottom: 4px;
+        }
+        .loading-card small {
+            font-size: 12px; color: #94A3B8;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-card">
+            <div class="loading-spinner"></div>
+            <p>Mengirim laporan...</p>
+            <small>Mohon tunggu sebentar</small>
+        </div>
+    </div>
 
     <?php include 'partials/header.php'; ?>
 
@@ -205,118 +257,126 @@
                 <p class="text-[14px] text-ink-600 max-w-sm mx-auto leading-6" data-i18n="upload.desc">Laporkan kerusakan jalan yang Anda temukan. AI kami akan mendeteksi jenis dan tingkat keparahan secara otomatis.</p>
             </div>
 
-            <!-- ===== STEP 1: Upload Foto ===== -->
-            <div class="form-section">
-                <div class="fs-title">
-                    <span class="fs-num">1</span>
-                    <h2 data-i18n="upload.step1">Upload Foto Jalan Rusak</h2>
-                </div>
+            <form id="reportForm" enctype="multipart/form-data" method="POST" action="controller/upload_handler.php">
+                <input type="hidden" name="csrf_token" value="<?= $_SESSION['csrf_token'] ?? '' ?>">
+                <input type="hidden" name="latitude" id="latField" value="-7.250445">
+                <input type="hidden" name="longitude" id="lngField" value="112.768845">
+                <input type="hidden" name="damage_type" id="damageTypeField" value="">
+                <input type="hidden" name="damage_severity" id="severityField" value="">
+                <input type="hidden" name="detection_confidence" id="confidenceField" value="">
 
-                <!-- Dropzone — dengan ilustrasi upload.png -->
-                <div class="dropzone" id="dropZone">
-                    <!-- Ilustrasi dari assets/img/upload.png -->
-                    <div class="dz-img">
-                        <img src="assets/img/upload.png" alt="Upload">
+                <!-- ===== STEP 1: Upload Foto ===== -->
+                <div class="form-section">
+                    <div class="fs-title">
+                        <span class="fs-num">1</span>
+                        <h2 data-i18n="upload.step1">Upload Foto Jalan Rusak</h2>
                     </div>
-                    <div class="dz-title" data-i18n="upload.dropTitle">Tarik foto jalan rusak di sini</div>
-                    <div class="dz-sub" data-i18n="upload.dropSub">Format: JPG, PNG &bull; Maks 10MB</div>
-                    <button type="button" class="browse-btn" id="browseBtn">
-                        <i data-lucide="folder-open"></i>
-                        <span data-i18n="upload.browse">Pilih Foto</span>
-                    </button>
-                </div>
-                <input type="file" id="fileInput" accept="image/*">
 
-                <!-- Preview + Hasil Deteksi AI -->
-                <div id="previewWrap" style="display:none;">
-                    <div class="preview-card">
-                        <div class="prev-img-wrap">
-                            <img class="prev-img" id="previewImg" src="" alt="Preview">
-                            <div class="detection-overlay">
-                                <span class="detection-tag"><i data-lucide="scan"></i> Lubang Jalan — 92%</span>
-                                <span class="detection-tag"><i data-lucide="alert-triangle"></i> Tingkat: Parah</span>
+                    <!-- Dropzone — dengan ilustrasi upload.png -->
+                    <div class="dropzone" id="dropZone">
+                        <div class="dz-img">
+                            <img src="assets/img/upload.png" alt="Upload">
+                        </div>
+                        <div class="dz-title" data-i18n="upload.dropTitle">Tarik foto jalan rusak di sini</div>
+                        <div class="dz-sub" data-i18n="upload.dropSub">Format: JPG, PNG &bull; Maks 10MB</div>
+                        <button type="button" class="browse-btn" id="browseBtn">
+                            <i data-lucide="folder-open"></i>
+                            <span data-i18n="upload.browse">Pilih Foto</span>
+                        </button>
+                    </div>
+                    <input type="file" id="fileInput" name="image" accept="image/*" required>
+
+                    <!-- Preview + Hasil Deteksi AI -->
+                    <div id="previewWrap" style="display:none;">
+                        <div class="preview-card">
+                            <div class="prev-img-wrap">
+                                <img class="prev-img" id="previewImg" src="" alt="Preview">
+                                <div class="detection-overlay">
+                                    <span class="detection-tag"><i data-lucide="scan"></i> Lubang Jalan — 92%</span>
+                                    <span class="detection-tag"><i data-lucide="alert-triangle"></i> Tingkat: Parah</span>
+                                </div>
+                            </div>
+                            <div class="prev-actions">
+                                <button type="button" class="btn-ghost-small" id="clearBtn">
+                                    <i data-lucide="trash-2"></i>
+                                    <span data-i18n="upload.delete">Hapus</span>
+                                </button>
+                                <button type="button" class="btn-primary-small" id="analyzeBtn">
+                                    <i data-lucide="sparkles"></i>
+                                    <span data-i18n="upload.redetect">Deteksi Ulang</span>
+                                </button>
                             </div>
                         </div>
-                        <div class="prev-actions">
-                            <button class="btn-ghost-small" id="clearBtn">
-                                <i data-lucide="trash-2"></i>
-                                <span data-i18n="upload.delete">Hapus</span>
-                            </button>
-                            <button class="btn-primary-small" id="analyzeBtn">
-                                <i data-lucide="sparkles"></i>
-                                <span data-i18n="upload.redetect">Deteksi Ulang</span>
-                            </button>
+                    </div>
+                </div>
+
+                <!-- ===== STEP 2: Konfirmasi Lokasi ===== -->
+                <div class="form-section">
+                    <div class="fs-title">
+                        <span class="fs-num">2</span>
+                        <h2 data-i18n="upload.step2">Konfirmasi Lokasi</h2>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span data-i18n="upload.location">Lokasi</span>
+                            <span class="label-desc" data-i18n="upload.locAuto">(otomatis dari GPS)</span>
+                        </label>
+                        <div class="input-with-icon">
+                            <span class="iicon"><i data-lucide="map-pin"></i></span>
+                            <input class="field" type="text" id="locationField"
+                                   placeholder="Deteksi lokasi otomatis..." value="-7.250445, 112.768845" readonly>
+                        </div>
+                        <div class="gps-info">
+                            <i data-lucide="lock"></i>
+                            <span>Lokasi terdeteksi: </span>
+                            <span class="gps-mono">-7.250445, 112.768845</span>
+                            <span>&bull;</span>
+                            <span>Surabaya</span>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span data-i18n="upload.address">Alamat</span>
+                            <span class="label-desc" data-i18n="upload.addrOpt">(opsional, bisa diedit)</span>
+                        </label>
+                        <div class="input-with-icon">
+                            <span class="iicon"><i data-lucide="home"></i></span>
+                            <input class="field" type="text" name="address" id="alamatField"
+                                   placeholder="Masukkan alamat lokasi" value="Jl. Raya Ahmad Yani, Surabaya">
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- ===== STEP 2: Konfirmasi Lokasi ===== -->
-            <div class="form-section">
-                <div class="fs-title">
-                    <span class="fs-num">2</span>
-                    <h2 data-i18n="upload.step2">Konfirmasi Lokasi</h2>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">
-                        <span data-i18n="upload.location">Lokasi</span>
-                        <span class="label-desc" data-i18n="upload.locAuto">(otomatis dari GPS)</span>
-                    </label>
-                    <div class="input-with-icon">
-                        <span class="iicon"><i data-lucide="map-pin"></i></span>
-                        <input class="field" type="text" id="locationField"
-                               placeholder="Deteksi lokasi otomatis..." value="-7.250445, 112.768845" readonly>
+                <!-- ===== STEP 3: Catatan Tambahan ===== -->
+                <div class="form-section">
+                    <div class="fs-title">
+                        <span class="fs-num">3</span>
+                        <h2 data-i18n="upload.step3">Catatan Tambahan</h2>
                     </div>
-                    <div class="gps-info">
-                        <i data-lucide="lock"></i>
-                        <span>Lokasi terdeteksi: </span>
-                        <span class="gps-mono">-7.250445, 112.768845</span>
-                        <span>&bull;</span>
-                        <span>Jl. Raya No. 123, Surabaya</span>
+                    <div class="form-group">
+                        <label class="form-label">
+                            <span data-i18n="upload.descLabel">Deskripsi</span>
+                            <span class="label-desc" data-i18n="upload.descOpt">(opsional)</span>
+                        </label>
+                        <textarea class="field textarea" name="description" id="catatanField"
+                                  placeholder="Contoh: Jalan ini sudah rusak sejak 2 minggu lalu..."></textarea>
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label class="form-label">
-                        <span data-i18n="upload.address">Alamat</span>
-                        <span class="label-desc" data-i18n="upload.addrOpt">(opsional, bisa diedit)</span>
-                    </label>
-                    <div class="input-with-icon">
-                        <span class="iicon"><i data-lucide="home"></i></span>
-                        <input class="field" type="text" id="alamatField"
-                               placeholder="Masukkan alamat lokasi" value="Jl. Raya Ahmad Yani No. 123, Surabaya">
-                    </div>
+                <!-- ===== TOMBOL SUBMIT ===== -->
+                <div class="flex gap-3">
+                    <button type="button" class="btn-back" style="flex:1;" onclick="history.back()">
+                        <i data-lucide="arrow-left"></i>
+                        <span data-i18n="upload.back">Kembali</span>
+                    </button>
+                    <button type="submit" class="btn-submit" style="flex:2;" id="submitBtn">
+                        <i data-lucide="send"></i>
+                        <span data-i18n="upload.submit">Kirim Laporan</span>
+                    </button>
                 </div>
-            </div>
-
-            <!-- ===== STEP 3: Catatan Tambahan ===== -->
-            <div class="form-section">
-                <div class="fs-title">
-                    <span class="fs-num">3</span>
-                    <h2 data-i18n="upload.step3">Catatan Tambahan</h2>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">
-                        <span data-i18n="upload.descLabel">Deskripsi</span>
-                        <span class="label-desc" data-i18n="upload.descOpt">(opsional)</span>
-                    </label>
-                    <textarea class="field textarea" id="catatanField"
-                              placeholder="Contoh: Jalan ini sudah rusak sejak 2 minggu lalu...">Lubang cukup dalam, diameter sekitar 30cm. Berbahaya bagi pengendara motor terutama saat malam hari.</textarea>
-                </div>
-            </div>
-
-            <!-- ===== TOMBOL SUBMIT ===== -->
-            <div class="flex gap-3">
-                <button class="btn-back" style="flex:1;" onclick="history.back()">
-                    <i data-lucide="arrow-left"></i>
-                    <span data-i18n="upload.back">Kembali</span>
-                </button>
-                <button class="btn-submit" style="flex:2;" id="submitBtn">
-                    <i data-lucide="send"></i>
-                    <span data-i18n="upload.submit">Kirim Laporan</span>
-                </button>
-            </div>
+            </form>
 
         </div>
     </div>
@@ -332,6 +392,8 @@
         const previewWrap = document.getElementById('previewWrap');
         const previewImg  = document.getElementById('previewImg');
         const clearBtn   = document.getElementById('clearBtn');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const reportForm = document.getElementById('reportForm');
 
         browseBtn.addEventListener('click', function (e) { e.stopPropagation(); fileInput.click(); });
         dropZone.addEventListener('click', function () { fileInput.click(); });
@@ -372,15 +434,78 @@
             fileInput.value = '';
         });
 
-        document.getElementById('submitBtn').addEventListener('click', function () {
-            if (!previewImg.src || previewWrap.style.display === 'none') {
+        // Get real GPS location
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                var lat = pos.coords.latitude.toFixed(6);
+                var lng = pos.coords.longitude.toFixed(6);
+                document.getElementById('locationField').value = lat + ', ' + lng;
+                document.getElementById('latField').value = lat;
+                document.getElementById('lngField').value = lng;
+            });
+        }
+
+        // Submit via AJAX
+        reportForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            if (!fileInput.files[0]) {
                 alert('Silakan upload foto jalan rusak terlebih dahulu.');
                 return;
             }
-            var reportId = 'RK-' + new Date().getFullYear() + '-' +
-                String(Math.floor(Math.random() * 9999)).padStart(4, '0');
-            alert('Laporan berhasil dikirim!\n\nID Laporan: ' + reportId + '\nStatus: Dilaporkan\n\nPantau progres perbaikan melalui menu Riwayat Laporan.');
-            window.location.href = 'profile.php';
+
+            loadingOverlay.classList.add('active');
+
+            var formData = new FormData(reportForm);
+
+            fetch('controller/upload_handler.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(function (resp) { return resp.json(); })
+            .then(function (data) {
+                loadingOverlay.classList.remove('active');
+                if (data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Laporan Terkirim!',
+                        html: 'Terima kasih telah memberi tahu. Untuk tindakan lebih lanjut, akan kami serahkan ke pusat.<br><br><strong>ID Laporan:</strong> ' + data.report_id + '<br><strong>Status:</strong> Dilaporkan',
+                        confirmButtonText: 'Lihat Riwayat',
+                        confirmButtonColor: '#1D4ED8',
+                        showCancelButton: true,
+                        cancelButtonText: 'Kembali',
+                        cancelButtonColor: '#94A3B8',
+                        allowOutsideClick: false,
+                        customClass: { popup: 'rounded-[16px]' }
+                    }).then(function (result) {
+                        if (result.isConfirmed) {
+                            window.location.href = 'profile.php?report=' + data.report_id;
+                        } else {
+                            reportForm.reset();
+                            document.getElementById('previewWrap').style.display = 'none';
+                            document.querySelector('.dropzone').style.display = '';
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal Mengirim',
+                        text: data.message || 'Terjadi kesalahan. Silakan coba lagi.',
+                        confirmButtonColor: '#DC2626',
+                        customClass: { popup: 'rounded-[16px]' }
+                    });
+                }
+            })
+            .catch(function (err) {
+                loadingOverlay.classList.remove('active');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Kesalahan Sistem',
+                    text: 'Terjadi kesalahan sistem. Silakan coba lagi.',
+                    confirmButtonColor: '#DC2626',
+                    customClass: { popup: 'rounded-[16px]' }
+                });
+            });
         });
     </script>
 </body>
