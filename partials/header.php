@@ -81,8 +81,23 @@ if ($isLoggedIn && isset($_SESSION['user_id'])) {
 
 <!-- Mobile Menu Panel -->
 <div class="fixed top-0 right-0 z-[160] w-[300px] max-w-[85vw] h-screen bg-white shadow-2xl translate-x-full transition-transform duration-350 ease-in-out overflow-y-auto" id="mobileMenu">
-    <div class="pt-20 pb-6 px-5">
+    <div class="pt-20 pb-6 px-4">
+        <!-- User Info (when logged in) -->
+        <?php if ($isLoggedIn): ?>
+        <div class="flex items-center gap-3 px-4 py-3 mb-4 bg-gray-50 rounded-xl border border-gray-100">
+            <span class="w-10 h-10 rounded-lg bg-[#1D4ED8] flex items-center justify-center text-[14px] font-bold text-white shrink-0"><?= strtoupper(substr($headerUsername, 0, 2)) ?></span>
+            <div class="min-w-0 flex-1">
+                <div class="text-[14px] font-semibold text-gray-900 truncate"><?= htmlspecialchars($headerUsername) ?></div>
+                <div class="text-[11px] text-gray-500"><?= htmlspecialchars($_SESSION['role'] ?? 'user') ?></div>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <div class="flex flex-col gap-0.5">
+            <!-- Navigation Section -->
+            <div class="px-4 pb-1.5 pt-1">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.08em]">Navigasi</span>
+            </div>
             <a href="index.php" class="mobile-link-ds" id="mNavDashboard">
                 <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
                 <span data-i18n="nav.home">Beranda</span>
@@ -103,7 +118,11 @@ if ($isLoggedIn && isset($_SESSION['user_id'])) {
                 <i data-lucide="newspaper" class="w-5 h-5"></i>
                 <span data-i18n="nav.news">Berita</span>
             </a>
-            <hr class="border-none border-t border-gray-200 my-2 mx-4">
+
+            <!-- Account Section -->
+            <div class="mt-4 pt-3 border-t border-gray-200 px-4 pb-1.5">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.08em]">Akun</span>
+            </div>
             <?php if ($isLoggedIn): ?>
             <a href="profile.php" class="mobile-link-ds" id="mNavProfile">
                 <i data-lucide="file-text" class="w-5 h-5"></i>
@@ -115,24 +134,27 @@ if ($isLoggedIn && isset($_SESSION['user_id'])) {
                 <span>Admin Panel</span>
             </a>
             <?php endif; ?>
-            <a href="auth/logout.php" class="mobile-link-ds text-[#DC2626] hover:bg-red-50">
-                <i data-lucide="log-out" class="w-5 h-5 text-[#DC2626]"></i>
+            <a href="auth/logout.php" class="mobile-link-ds mobile-link-danger">
+                <i data-lucide="log-out" class="w-5 h-5"></i>
                 <span>Keluar</span>
             </a>
             <?php else: ?>
-            <a href="auth/login.php" class="mobile-link-ds text-[#1D4ED8] font-semibold">
-                <i data-lucide="log-in" class="w-5 h-5 text-[#1D4ED8]"></i>
+            <a href="auth/login.php" class="mobile-link-ds mobile-link-primary">
+                <i data-lucide="log-in" class="w-5 h-5"></i>
                 <span>Masuk</span>
             </a>
             <a href="auth/register.php" class="mobile-link-ds">
-                <i data-lucide="user-plus" class="w-5 h-5 text-[#475569]"></i>
+                <i data-lucide="user-plus" class="w-5 h-5"></i>
                 <span>Daftar</span>
             </a>
             <?php endif; ?>
-            <hr class="border-none border-t border-gray-200 my-2 mx-4">
-            <div class="px-4 py-3">
-                <span class="text-[12px] text-[#94A3B8] font-semibold uppercase tracking-wide">Bahasa</span>
-                <div class="flex gap-2 mt-2">
+
+            <!-- Settings Section -->
+            <div class="mt-4 pt-3 border-t border-gray-200 px-4 pb-1.5">
+                <span class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.08em]">Pengaturan</span>
+            </div>
+            <div class="px-4 py-2">
+                <div class="flex gap-2">
                     <button class="mobile-lang-btn" data-lang="id" onclick="switchLang('id')">🇮🇩 Indonesia</button>
                     <button class="mobile-lang-btn" data-lang="en" onclick="switchLang('en')">🇬🇧 English</button>
                 </div>
@@ -182,25 +204,51 @@ if ($isLoggedIn && isset($_SESSION['user_id'])) {
     /* ===== Mobile Links ===== */
     .mobile-link-ds {
         display: flex; align-items: center; gap: 12px;
-        padding: 14px 16px; border-radius: 10px;
-        text-decoration: none; font-size: 15px; font-weight: 500;
-        color: #0F172A; transition: all 0.15s ease;
+        padding: 12px 16px; border-radius: 10px;
+        text-decoration: none; font-size: 14px; font-weight: 500;
+        color: #334155; transition: all 0.15s ease;
+        position: relative;
     }
-    .mobile-link-ds:hover { background: #F8FAFC; color: #1D4ED8; }
-    .mobile-link-ds i { color: #94A3B8; flex-shrink: 0; }
+    .mobile-link-ds:hover {
+        background: #F1F5F9;
+        color: #1D4ED8;
+        transform: translateX(4px);
+    }
+    .mobile-link-ds i { color: #94A3B8; flex-shrink: 0; transition: color 0.15s ease; }
     .mobile-link-ds:hover i { color: #1D4ED8; }
-    .mobile-link-ds.active { background: #DBEAFE; color: #1D4ED8; font-weight: 600; }
+    .mobile-link-ds.active {
+        background: #EFF6FF;
+        color: #1D4ED8;
+        font-weight: 600;
+        box-shadow: inset 3px 0 0 #1D4ED8;
+    }
     .mobile-link-ds.active i { color: #1D4ED8; }
+    .mobile-link-primary {
+        color: #1D4ED8 !important;
+        font-weight: 600;
+    }
+    .mobile-link-primary i { color: #1D4ED8 !important; }
+    .mobile-link-danger {
+        color: #DC2626 !important;
+    }
+    .mobile-link-danger:hover {
+        background: #FEF2F2 !important;
+        color: #B91C1C !important;
+    }
+    .mobile-link-danger i { color: #DC2626 !important; }
+    .mobile-link-danger:hover i { color: #B91C1C !important; }
 
     /* ===== Mobile Lang Button ===== */
     .mobile-lang-btn {
-        flex: 1; padding: 10px; border-radius: 8px;
+        flex: 1; padding: 10px 12px; border-radius: 10px;
         border: 1.5px solid #E2E8F0; background: #fff;
         font-size: 12px; font-weight: 500; cursor: pointer;
-        color: #0F172A; transition: all 0.15s ease;
+        color: #475569; transition: all 0.15s ease;
+        display: flex; align-items: center; gap: 6px;
+        justify-content: center;
     }
-    .mobile-lang-btn:hover { border-color: #3B82F6; background: #DBEAFE; }
-    .mobile-lang-btn.active-lang { border-color: #1D4ED8; background: #DBEAFE; color: #1D4ED8; font-weight: 600; }
+    .mobile-lang-btn:hover { border-color: #3B82F6; background: #EFF6FF; color: #1D4ED8; }
+    .mobile-lang-btn.active-lang { border-color: #1D4ED8; background: #EFF6FF; color: #1D4ED8; font-weight: 600; letter-spacing: -0.01em; }
 
     /* ===== Responsive ===== */
     @media (max-width: 1023px) {
@@ -210,6 +258,9 @@ if ($isLoggedIn && isset($_SESSION['user_id'])) {
         nav .text-xl { font-size: 17px; }
         nav .h-8 { height: 28px; }
     }
+    /* ===== Mobile Menu Open State ===== */
+    #mobileMenu.open { transform: translateX(0); }
+
     @media (min-width: 1024px) {
         #mobileMenu, #mobileOverlay { display: none !important; }
     }

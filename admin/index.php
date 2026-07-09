@@ -481,7 +481,7 @@ if ($usrStmt) {
                     '<td class="px-4 py-2.5 text-[13px] text-gray-900 border-t border-gray-100"><span class="text-xs text-gray-400">' + esc(r.created_ago) + '</span></td>' +
                     '<td class="px-4 py-2.5 text-[13px] text-gray-900 border-t border-gray-100"><div class="flex gap-1 flex-wrap">' +
                         '<button class="abtn abtn-primary" onclick="viewReport(' + r.id + ')">Detail</button>' +
-                        '<button class="abtn abtn-success" onclick="updateStatus(' + r.id + ',\\'selesai\\')">Selesai</button>' +
+                        '<button class="abtn abtn-success" onclick="updateStatus(' + r.id + ', \'selesai\')">Selesai</button>' +
                     '</div></td>' +
                 '</tr>';
             });
@@ -504,7 +504,7 @@ if ($usrStmt) {
                 var statuses = ['dilaporkan', 'diverifikasi', 'diperbaiki', 'selesai'];
                 statuses.forEach(function(s) {
                     var active = s === r.status;
-                    statusActions += '<button class="abtn ' + (active ? 'abtn-success' : 'abtn-ghost') + '" onclick="updateStatus(' + r.id + ',\\'' + s + '\\');closeModal();" ' + (active ? 'disabled' : '') + '>' + statusLabelText(s) + '</button> ';
+                    statusActions += '<button class="abtn ' + (active ? 'abtn-success' : 'abtn-ghost') + '" onclick="updateStatus(' + r.id + ', \'' + s + '\');closeModal();" ' + (active ? 'disabled' : '') + '>' + statusLabelText(s) + '</button> ';
                 });
 
                 document.getElementById('reportModalBody').innerHTML =
@@ -574,8 +574,8 @@ if ($usrStmt) {
             var html = '';
             users.forEach(function(u) {
                 var roleBtn = u.role === 'admin'
-                    ? '<button class="abtn abtn-warning" onclick="changeRole(' + u.id + ',\\'user\\')">⬇ Jadikan User</button>'
-                    : '<button class="abtn abtn-primary" onclick="changeRole(' + u.id + ',\\'admin\\')">⬆ Jadikan Admin</button>';
+                    ? '<button class="abtn abtn-warning" onclick="changeRole(' + u.id + ', \'user\')">⬇ Jadikan User</button>'
+                    : '<button class="abtn abtn-primary" onclick="changeRole(' + u.id + ', \'admin\')">⬆ Jadikan Admin</button>';
                 var statusBtn = '';
                 var approveBtn = '';
                 if (u.is_active == 2) {

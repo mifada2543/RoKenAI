@@ -75,7 +75,7 @@ function getProgressWidth($status) {
                     </span>
                 </div>
                 <div class="flex gap-2">
-                    <button class="px-4 py-2 rounded-lg bg-transparent text-[#475569] border border-[#E2E8F0] text-[12px] font-medium cursor-pointer transition-all duration-200 hover:bg-[#F8FAFC] hover:border-[#CBD5E1]" onclick="document.querySelector('[data-tab=\\'data-diri\\']').click()">
+                    <button class="px-4 py-2 rounded-lg bg-transparent text-[#475569] border border-[#E2E8F0] text-[12px] font-medium cursor-pointer transition-all duration-200 hover:bg-[#F8FAFC] hover:border-[#CBD5E1]" onclick="switchToTab('data-diri')">
                         <i data-lucide="edit-3" style="width:15px;height:15px;"></i> Edit Profil
                     </button>
                 </div>
@@ -299,6 +299,11 @@ function getProgressWidth($status) {
                 } else { Swal.fire({ icon: 'error', title: 'Gagal', text: data.message, confirmButtonColor: '#DC2626', customClass: { popup: 'rounded-[16px]' } }); }
             })
             .catch(function () { Swal.fire({ icon: 'error', title: 'Kesalahan Sistem', text: 'Gagal terhubung ke server.', confirmButtonColor: '#DC2626', customClass: { popup: 'rounded-[16px]' } }); });
+        }
+    
+        function switchToTab(name) {
+            var btn = document.querySelector('.profile-tab[data-tab="' + name + '"]');
+            switchTab(name, btn);
         }
     </script>
 </body>

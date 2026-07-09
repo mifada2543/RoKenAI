@@ -59,7 +59,7 @@ if (!isset($_SESSION['user_logged_in']) || $_SESSION['user_logged_in'] !== true)
                     <!-- Dropzone -->
                     <div class="relative w-full min-h-[280px] rounded-[10px] bg-[#F8FAFC] border-2 border-dashed border-[#E2E8F0] flex flex-col items-center justify-center p-8 text-center cursor-pointer transition-all duration-300 hover:border-[#3B82F6] hover:bg-[rgba(59,130,246,0.03)]" id="dropZone">
                         <div class="w-[110px] h-[110px] rounded-xl overflow-hidden mb-4 border border-[#E2E8F0] shadow-card">
-                            <img src="assets/img/upload.png" alt="Upload" class="w-full h-full object-cover">
+                            <img src="assets/Logo.png" alt="Upload" class="w-full h-full object-cover">
                         </div>
                         <div class="font-heading text-[15px] font-semibold text-[#0F172A] mb-1.5" data-i18n="upload.dropTitle">Tarik foto jalan rusak di sini</div>
                         <div class="text-[13px] text-[#94A3B8] mb-4" data-i18n="upload.dropSub">Format: JPG, PNG &bull; Maks 10MB</div>
@@ -171,7 +171,7 @@ if (!isset($_SESSION['user_logged_in']) || $_SESSION['user_logged_in'] !== true)
         .dropzone.dragover { border-color: #3B82F6 !important; background: rgba(59,130,246,0.06) !important; transform: scale(1.01); }
         @media (max-width: 480px) {
             form .p-7 { padding: 20px; }
-            .min-h-[280px] { min-height: 220px; }
+            .min-h-\[280px\] { min-height: 220px; }
             .flex.gap-3 { flex-direction: column; }
         }
     </style>

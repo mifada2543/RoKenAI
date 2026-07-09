@@ -153,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
     </style>
 </head>
 
-<body class="font-jakarta min-h-screen flex items-center justify-center overflow-x-hidden antialiased">
+<body class="font-jakarta min-h-screen flex items-center justify-center overflow-x-hidden antialiased" style="background:var(--bg-body, #0B0F19);">
 
     <!-- Background Orbs -->
     <div class="orb w-[350px] h-[350px] -top-25 -left-20 animate-float" style="background:rgba(99,102,241,0.06)"></div>
@@ -330,6 +330,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 html.setAttribute('data-theme', 'light');
                 icon.setAttribute('data-lucide', 'sun');
                 document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#F5F7FA');
+                html.style.setProperty('--bg-body', '#F5F7FA');
+                html.style.setProperty('--text-primary', '#0F172A');
+                html.style.setProperty('--text-secondary', '#475569');
                 if (card) {
                     card.style.setProperty('--bg-card', '#FFFFFF');
                     card.style.setProperty('--border-color', 'rgba(0,0,0,0.08)');
@@ -338,6 +341,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['register'])) {
                 html.setAttribute('data-theme', 'dark');
                 icon.setAttribute('data-lucide', 'moon');
                 document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#0B0F19');
+                html.style.setProperty('--bg-body', '#0B0F19');
+                html.style.setProperty('--text-primary', '#F1F5F9');
+                html.style.setProperty('--text-secondary', '#94A3B8');
                 if (card) {
                     card.style.setProperty('--bg-card', '#1E293B');
                     card.style.setProperty('--border-color', 'rgba(255,255,255,0.08)');
